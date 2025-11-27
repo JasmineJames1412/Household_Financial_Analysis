@@ -336,7 +336,7 @@ elif section == "💰 Financial Analysis":
     # === STATE-LEVEL COMPARISON ===
     elif view == "State-Level Comparison":
         selected_state = st.selectbox("Select State for Detailed Analysis:", sorted(temp_df['STATE'].unique()))
-        state_data = temp_df[temp_df['STATE'] == selected_state]
+        state_data = temp_df[temp_df['STATE'] == selected_state]  # FIXED: Removed extra temp_df[]
         
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -364,7 +364,7 @@ elif section == "💰 Financial Analysis":
     # === RURAL–URBAN WITHIN STATE (YOUR THESIS KILLER FEATURE) ===
     else:  # Rural–Urban Within State
         selected_state = st.selectbox("Select State to Compare Rural vs Urban:", sorted(temp_df['STATE'].unique()))
-        state_data = temp_df[temp_df[temp_df['STATE']] == selected_state]
+        state_data = temp_df[temp_df['STATE'] == selected_state]  # FIXED: Removed extra temp_df[]
         
         st.subheader(f"Rural vs Urban Financial Health — {selected_state}")
         
@@ -428,7 +428,7 @@ elif section == "💰 Financial Analysis":
     st.plotly_chart(fig_map, use_container_width=True)
 
     st.success("Financial Intelligence Engine Complete — Proves: Income hides suffering. Savings, debt, and food share reveal the truth.")
-
+    
 # INNOVATION 4: STATE COMPARISON ENGINE
 elif section == "🏙️ Regional Intelligence":
     st.markdown('<div class="section-header">🏙️ Regional Intelligence & Benchmarking</div>', unsafe_allow_html=True)
