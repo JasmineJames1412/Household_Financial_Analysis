@@ -170,9 +170,8 @@ if section == "🌐 Dashboard Overview":
         st.markdown('</div>', unsafe_allow_html=True)
     
     # FIXED INNOVATION 4: WORKING INDIA MAP
-    st.subheader("🗺️ Geographic Economic Heatmap of India")
-    
-    # Create state-level summary for mapping
+    st.subheader("🗺️ Geographic Economic Heatmap")
+
     state_summary = df_clean.groupby('STATE').agg({
         'TOTAL_INCOME': 'mean',
         'TOTAL_EXPENDITURE': 'mean',
@@ -180,63 +179,46 @@ if section == "🌐 Dashboard Overview":
         'HH_WEIGHT_MS': 'count'
     }).reset_index()
     
-    state_summary.columns = ['STATE', 'Avg_Income', 'Avg_Expenditure', 'Urbanization_Rate', 'Household_Count']
-    state_summary['Income_Expenditure_Ratio'] = state_summary['Avg_Income'] / state_summary['Avg_Expenditure']
+    state_summary.columns = ['STATE', 'Avg_Income', 'Avg_Expenditure', 'Urban_Rate', 'Count']
+    state_summary['Savings_Ratio'] = state_summary['Avg_Income'] / state_summary['Avg_Expenditure']
     
-    # Standardize state names for Plotly
-    state_mapping = {
-        'Jammu & Kashmir': 'Jammu and Kashmir',
+    # Standardize state names
+    name_fix = {
+        'Jammu & Kashmir': 'Jammu & Kashmir',
         'NCT of Delhi': 'Delhi',
-        'Andaman & Nicobar Islands': 'Andaman and Nicobar Islands',
-        'Dadra & Nagar Haveli': 'Dadra and Nagar Haveli',
-        'Daman & Diu': 'Daman and Diu',
+        'Andaman & Nicobar': 'Andaman & Nicobar Islands',
+        'Dadra & Nagar Haveli': 'Dadra and Nagar Haveli and Daman and Diu',
+        'Daman & N Haveli': 'Dadra and Nagar Haveli and Daman and Diu',
+        'Daman & Diu': 'Dadra and Nagar Haveli and Daman and Diu',
         'Pondicherry': 'Puducherry',
+        'Orissa': 'Odisha',
         'Uttaranchal': 'Uttarakhand'
     }
+    state_summary['state_clean'] = state_summary['STATE'].replace(name_fix)
     
-    state_summary['STATE_STD'] = state_summary['STATE'].replace(state_mapping)
+    fig = px.choropleth(
+        state_summary,
+        geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+        featureidkey="properties.ST_NM",
+        locations='state_clean',
+        color='Avg_Income',
+        hover_name='STATE',
+        hover_data={
+            'Avg_Income': ':,.0f',
+            'Avg_Expenditure': ':,.0f',
+            'Urban_Rate': ':.1%',
+            'Count': ':,',
+            'state_clean': False
+        },
+        color_continuous_scale="YlOrRd",
+        title="Average Household Income by State (₹ per month)"
+    )
     
-    # Create working India map
-    try:
-        fig_map = px.choropleth(
-            state_summary,
-            locations='STATE_STD',
-            locationmode='country names',
-            color='Avg_Income',
-            scope='asia',
-            hover_name='STATE',
-            hover_data={
-                'Avg_Income': ':.0f',
-                'Avg_Expenditure': ':.0f',
-                'Urbanization_Rate': ':.1%',
-                'Household_Count': ':,',
-                'STATE_STD': False
-            },
-            color_continuous_scale="Viridis",
-            title="Average Monthly Household Income by State (₹)",
-            labels={'Avg_Income': 'Monthly Income (₹)'}
-        )
-        
-        # Center on India with proper zoom
-        fig_map.update_geos(
-            visible=False,
-            center={"lat": 22, "lon": 79},
-            projection_scale=4.5
-        )
-        
-        fig_map.update_layout(
-            height=600,
-            margin={"r": 0, "t": 50, "l": 0, "b": 0}
-        )
-        
-        st.plotly_chart(fig_map, use_container_width=True)
-        
-    except Exception as e:
-        st.error(f"Map rendering failed: {str(e)}")
-        # Fallback: Show state data in a table
-        st.subheader("State-wise Economic Data (Fallback)")
-        st.dataframe(state_summary[['STATE', 'Avg_Income', 'Avg_Expenditure', 'Urbanization_Rate']].sort_values('Avg_Income', ascending=False), use_container_width=True)
+    fig.update_geos(fitbounds="locations", visible=False)
+    fig.update_layout(height=650, title_x=0.5, margin=dict(t=80, b=0, l=0, r=0))
     
+    st.plotly_chart(fig, use_container_width=True)
+
     # INNOVATION 5: Quick Insights Cards
     st.subheader("💡 Automated Intelligence Insights")
     
