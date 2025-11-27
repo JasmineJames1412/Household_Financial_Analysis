@@ -209,56 +209,35 @@ if section == "🌐 Dashboard Overview":
     
     # === DYNAMIC INTELLIGENCE CAPTION ===
     if metric == "Savings Rate (%)":
-        top_states = state_summary.nlargest(3, 'Savings_Rate')[['STATE', 'Savings_Rate']]
-        bottom_states = state_summary.nsmallest(3, 'Savings_Rate')[['STATE', 'Savings_Rate']]
-        color_scale = "RdYlGn"
+        top_states = state_summary.nlargest(n_top_bottom, 'Savings_Rate')[['STATE', 'Savings_Rate']]
+        bottom_states = state_summary.nsmallest(n_top_bottom, 'Savings_Rate')[['STATE', 'Savings_Rate']]
+        unit = "%"
         best_color = "darkgreen"
         worst_color = "darkred"
-    elif metric == "Average Monthly Savings (₹)":
-        top_states = state_summary.nlargest(3, 'Savings')[['STATE', 'Savings']]
-        bottom_states = state_summary.nsmallest(3, 'Savings')[['STATE', 'Savings']]
-        color_scale = "RdYlGn"
-        best_color = "darkgreen"
-        worst_color = "darkred"
-    elif metric == "Average Income (₹)":
-        top_states = state_summary.nlargest(3, 'TOTAL_INCOME')[['STATE', 'TOTAL_INCOME']]
-        bottom_states = state_summary.nsmallest(3, 'TOTAL_INCOME')[['STATE', 'TOTAL_INCOME']]
-        color_scale = "Viridis"
+    else:
+        col_name = {'Average Monthly Savings (₹)': 'Savings',
+                    'Average Monthly Income (₹)': 'TOTAL_INCOME',
+                    'Average Monthly Expenditure (₹)': 'TOTAL_EXPENDITURE'}[metric]
+        top_states = state_summary.nlargest(n_top_bottom, col_name)[['STATE', col_name]]
+        bottom_states = state_summary.nsmallest(n_top_bottom, col_name)[['STATE', col_name]]
+        unit = "₹"
         best_color = "gold"
         worst_color = "purple"
-    else:  # Expenditure
-        top_states = state_summary.nlargest(3, 'TOTAL_EXPENDITURE')[['STATE', 'TOTAL_EXPENDITURE']]
-        bottom_states = state_summary.nsmallest(3, 'TOTAL_EXPENDITURE')[['STATE', 'TOTAL_EXPENDITURE']]
-        color_scale = "Plasma"
-        best_color = "orange"
-        worst_color = "blue"
-        
-    # Format numbers nicely
-    if "Savings" in metric or "Income" in metric or "Expenditure" in metric:
-        top_states['value'] = top_states.iloc[:, 1].apply(lambda x: f"₹{x:,.0f}")
-        bottom_states['value'] = bottom_states.iloc[:, 1].apply(lambda x: f"₹{x:,.0f}")
-    else:
-        top_states['value'] = top_states.iloc[:, 1].apply(lambda x: f"{x:.1f}%")
-        bottom_states['value'] = bottom_states.iloc[:, 1].apply(lambda x: f"{x:.1f}%")
-
-    # Build dynamic message
-    top_list = " • ".join([f"{row['STATE']}: {row['value']}" for _, row in top_states.iterrows()])
-    bottom_list = " • ".join([f"{row['STATE']}: {row['value']}" for _, row in bottom_states.iterrows()])
-
+    
+    # Format values correctly
+    top_states['display'] = top_states.iloc[:, 1].apply(lambda x: f"{x:,.1f}{unit}" if unit == "%" else f"₹{x:,.0f}")
+    bottom_states['display'] = bottom_states.iloc[:, 1].apply(lambda x: f"{x:,.1f}{unit}" if unit == "%" else f"₹{x:,.0f}")
+    
+    top_list = " • ".join([f"**{row['STATE']}**: {row['display']}" for _, row in top_states.iterrows()])
+    bottom_list = " • ".join([f"**{row['STATE']}**: {row['display']}" for _, row in bottom_states.iterrows()])
+    
+    # === BEAUTIFUL DYNAMIC CAPTION ===
     st.markdown(f"""
-    <div style="background: linear-gradient(90deg, #1e3d59, #2c5282); padding: 18px; border-radius: 12px; color: white; font-size: 18px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
-        <b>Top 3 States</b> → <span style="color:{best_color}; font-size:20px;">{top_list}</span><br><br>
-        <b>Bottom 3 States</b> → <span style="color:{worst_color}; font-size:20px;">{bottom_list}</span>
+    <div style="background: linear-gradient(90deg, #1a1a2e, #16213e); padding: 20px; border-radius: 15px; color: white; font-size: 19px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.3); border-left: 6px solid #00d4ff;">
+        <p style="margin:0; font-size:22px; color:#00ff9d;">Top {n_top_bottom} States → {top_list}</p>
+        <p style="margin:10px 0 0 0; font-size:22px; color:#ff6b6b;">Bottom {n_top_bottom} States → {bottom_list}</p>
     </div>
     """, unsafe_allow_html=True)
-
-    # Optional: Add a small insight based on your thesis
-    if metric == "Savings Rate (%)":
-        st.markdown("Meghalaya leads India in savings rate • Large joint families + formal jobs = financial resilience")
-    elif metric == "Average Monthly Savings (₹)":
-        st.markdown("High savings in Meghalaya & North-East reflect your thesis finding: Joint family = financial superpower")
-    elif metric == "Average Monthly Income (₹)":
-        st.markdown("Goa, Haryana, Maharashtra lead in raw income — but remember: cost of living is also highest here")
 
     # Finally plot the map
     fig = px.choropleth(state_summary,
