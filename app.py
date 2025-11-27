@@ -183,76 +183,54 @@ if section == "🌐 Dashboard Overview":
         st.metric("💸 Savings Rate", f"{savings_rate:.1f}%", "Financial Health")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # INNOVATION 4: Interactive National Map → FIXED FOR INDIA
-    st.subheader("Geographic Economic Heatmap")
+# SIMPLE WORKING INDIA MAP
+st.subheader("🗺️ India Economic Map")
+
+# Create state summary
+state_summary = df_clean.groupby('STATE').agg({
+    'TOTAL_INCOME': 'mean',
+    'TOTAL_EXPENDITURE': 'mean',
+    'REGION_TYPE': lambda x: (x == 'URBAN').mean(),
+    'HH_WEIGHT_MS': 'count'
+}).reset_index()
+
+# Simple state name standardization
+state_mapping = {
+    'Jammu & Kashmir': 'Jammu and Kashmir',
+    'NCT of Delhi': 'Delhi', 
+    'Pondicherry': 'Puducherry',
+    'Uttaranchal': 'Uttarakhand'
+}
+
+state_summary['STATE_CLEAN'] = state_summary['STATE'].replace(state_mapping)
+
+# Create the map
+fig = px.choropleth(
+    state_summary,
+    locations='STATE_CLEAN',
+    locationmode='country names',
+    color='TOTAL_INCOME',
+    scope='asia',
+    hover_name='STATE',
+    hover_data={
+        'TOTAL_INCOME': ':.0f',
+        'TOTAL_EXPENDITURE': ':.0f'
+    },
+    color_continuous_scale="Viridis",
+    title="Average Household Income by State (₹)"
+)
+
+# Center on India
+fig.update_geos(
+    visible=False,
+    center={"lat": 22, "lon": 79},
+    projection_scale=5
+)
+
+fig.update_layout(height=600)
+st.plotly_chart(fig, use_container_width=True)
     
-    # Create state-level summary
-    state_summary = df_clean.groupby('STATE').agg({
-        'TOTAL_INCOME': 'mean',
-        'TOTAL_EXPENDITURE': 'mean',
-        'REGION_TYPE': lambda x: (x == 'URBAN').mean(),
-        'HH_WEIGHT_MS': 'count'
-    }).reset_index()
-    
-    state_summary.columns = ['STATE', 'Avg_Income', 'Avg_Expenditure', 'Urbanization_Rate', 'Household_Count']
-    state_summary['Income_Expenditure_Ratio'] = state_summary['Avg_Income'] / state_summary['Avg_Expenditure']
-    
-    # === CRITICAL FIX: Map common state name variations to standard names recognized by Plotly ===
-    state_name_mapping = {
-        'Jammu & Kashmir': 'Jammu and Kashmir',
-        'NCT of Delhi': 'Delhi',
-        'Andaman & Nicobar Islands': 'Andaman and Nicobar Islands',
-        'Dadra & Nagar Haveli': 'Dadra and Nagar Haveli and Daman and Diu',
-        'Daman & Diu': 'Dadra and Nagar Haveli and Daman and Diu',
-        'Pondicherry': 'Puducherry',
-        # Add more if needed based on your data
-    }
-    
-    state_summary['STATE_STD'] = state_summary['STATE'].replace(state_name_mapping)
-    
-    # === FINAL WORKING INDIA MAP ===
-    fig_map = px.choropleth(
-        state_summary,
-        geojson="https://raw.githubusercontent.com/geohacker/india/master/state/india_telangana.geojson",
-        featureidkey="properties.NAME_1",  # This matches the geojson structure
-        locations='STATE_STD',
-        color='Avg_Income',
-        hover_name='STATE',
-        hover_data={
-            'Avg_Income': ':,.0f',
-            'Avg_Expenditure': ':,.0f',
-            'Urbanization_Rate': ':.1%',
-            'Household_Count': ':,',
-            'STATE_STD': False
-        },
-        color_continuous_scale="Viridis",
-        title="Average Monthly Household Income by State (₹)",
-        labels={'Avg_Income': 'Avg Income (₹)'}
-    )
-    
-    # === Lock zoom to India only + beautiful styling ===
-    fig_map.update_geos(
-        visible=False,
-        resolution=50,
-        scope="asia",
-        showcountries=True,
-        countrycolor="Black",
-        showsubunits=True,
-        subunitcolor="Black",
-        center={"lat": 23, "lon": 80},
-        projection_scale=7  # Perfect zoom for India
-    )
-    
-    fig_map.update_layout(
-        height=700,
-        margin={"r": 0, "t": 50, "l": 0, "b": 0},
-        title_x=0.5,
-        title_font_size=20
-    )
-    
-    st.plotly_chart(fig_map, use_container_width=True)
-    
-    # INNOVATION 5: Quick Insights Cards
+# INNOVATION 5: Quick Insights Cards
     st.subheader("💡 Automated Intelligence Insights")
     
     col1, col2 = st.columns(2)
