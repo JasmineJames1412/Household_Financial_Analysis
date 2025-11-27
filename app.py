@@ -169,7 +169,7 @@ if section == "🌐 Dashboard Overview":
         st.metric("💸 Savings Rate", f"{savings_rate:.1f}%", "Financial Health")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # FIXED INNOVATION 4: WORKING INDIA MAP
+    # INNOVATION 4: WORKING INDIA MAP
     st.subheader("Geographic Financial Stress Map")
     
     state_summary = df_clean.groupby('STATE').agg({
@@ -207,20 +207,80 @@ if section == "🌐 Dashboard Overview":
                  'Average Monthly Income (₹)': 'TOTAL_INCOME',
                  'Average Monthly Expenditure (₹)': 'TOTAL_EXPENDITURE'}[metric]
     
+    # === DYNAMIC INTELLIGENCE CAPTION ===
+    if metric == "Savings Rate (%)":
+        top_states = state_summary.nlargest(3, 'Savings_Rate')[['STATE', 'Savings_Rate']]
+        bottom_states = state_summary.nsmallest(3, 'Savings_Rate')[['STATE', 'Savings_Rate']]
+        color_scale = "RdYlGn"
+        best_color = "darkgreen"
+        worst_color = "darkred"
+    elif metric == "Average Monthly Savings (₹)":
+        top_states = state_summary.nlargest(3, 'Savings')[['STATE', 'Savings']]
+        bottom_states = state_summary.nsmallest(3, 'Savings')[['STATE', 'Savings']]
+        color_scale = "RdYlGn"
+        best_color = "darkgreen"
+        worst_color = "darkred"
+    elif metric == "Average Income (₹)":
+        top_states = state_summary.nlargest(3, 'TOTAL_INCOME')[['STATE', 'TOTAL_INCOME']]
+        bottom_states = state_summary.nsmallest(3, 'TOTAL_INCOME')[['STATE', 'TOTAL_INCOME']]
+        color_scale = "Viridis"
+        best_color = "gold"
+        worst_color = "purple"
+    else:  # Expenditure
+        top_states = state_summary.nlargest(3, 'TOTAL_EXPENDITURE')[['STATE', 'TOTAL_EXPENDITURE']]
+        bottom_states = state_summary.nsmallest(3, 'TOTAL_EXPENDITURE')[['STATE', 'TOTAL_EXPENDITURE']]
+        color_scale = "Plasma"
+        best_color = "orange"
+        worst_color = "blue"
+        
+    # Format numbers nicely
+    if "Savings" in metric or "Income" in metric or "Expenditure" in metric:
+        top_states['value'] = top_states.iloc[:, 1].apply(lambda x: f"₹{x:,.0f}")
+        bottom_states['value'] = bottom_states.iloc[:, 1].apply(lambda x: f"₹{x:,.0f}")
+    else:
+        top_states['value'] = top_states.iloc[:, 1].apply(lambda x: f"{x:.1f}%")
+        bottom_states['value'] = bottom_states.iloc[:, 1].apply(lambda x: f"{x:.1f}%")
+
+    # Build dynamic message
+    top_list = " • ".join([f"{row['STATE']}: {row['value']}" for _, row in top_states.iterrows()])
+    bottom_list = " • ".join([f"{row['STATE']}: {row['value']}" for _, row in bottom_states.iterrows()])
+
+    st.markdown(f"""
+    <div style="background: linear-gradient(90deg, #1e3d59, #2c5282); padding: 18px; border-radius: 12px; color: white; font-size: 18px; margin-top: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+        <b>Top 3 States</b> → <span style="color:{best_color}; font-size:20px;">{top_list}</span><br><br>
+        <b>Bottom 3 States</b> → <span style="color:{worst_color}; font-size:20px;">{bottom_list}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Optional: Add a small insight based on your thesis
+    if metric == "Savings Rate (%)":
+        st.markdown("Meghalaya leads India in savings rate • Large joint families + formal jobs = financial resilience")
+    elif metric == "Average Monthly Savings (₹)":
+        st.markdown("High savings in Meghalaya & North-East reflect your thesis finding: Joint family = financial superpower")
+    elif metric == "Average Monthly Income (₹)":
+        st.markdown("Goa, Haryana, Maharashtra lead in raw income — but remember: cost of living is also highest here")
+
+    # Finally plot the map
     fig = px.choropleth(state_summary,
                         geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
                         featureidkey="properties.ST_NM",
                         locations='State',
                         color=color_col,
                         hover_name='STATE',
-                        hover_data={'TOTAL_INCOME': ':,.0f', 'TOTAL_EXPENDITURE': ':,.0f', 'Savings': ':,.0f', 'Savings_Rate': ':.1f'},
-                        color_continuous_scale="RdYlGn" if "Savings" in metric else "Viridis",
-                        title=f"India — {metric} (2022)")
-    fig.update_geos(fitbounds="locations", visible=False)
-    fig.update_layout(height=650)
-    st.plotly_chart(fig, use_container_width=True)
+                        hover_data={
+                            'TOTAL_INCOME': ':,.0f',
+                            'TOTAL_EXPENDITURE': ':,.0f', 
+                            'Savings': ':,.0f',
+                            'Savings_Rate': ':.1f'
+                        },
+                        color_continuous_scale=color_scale,
+                        title=f"India — {metric} (2022)",
+                        height=650)
     
-    st.success("Meghalaya has the highest savings rate in India • Chhattisgarh & Jharkhand have negative savings → matches thesis findings")
+    fig.update_geos(fitbounds="locations", visible=False)
+    fig.update_layout(margin={"r":0,"t":60,"l":0,"b":0}, title_x=0.5)
+    
+    st.plotly_chart(fig, use_container_width=True)
     
     # INNOVATION 5: Quick Insights Cards
     st.subheader("💡 Automated Intelligence Insights")
