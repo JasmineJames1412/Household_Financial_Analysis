@@ -238,8 +238,8 @@ if section == "🌐 Dashboard Overview":
         top_states['display'] = top_states['TOTAL_EXPENDITURE'].apply(lambda x: f"₹{x:,.0f}")
         bottom_states['display'] = bottom_states['TOTAL_EXPENDITURE'].apply(lambda x: f"₹{x:,.0f}")
     
-    top_list = " • ".join([f"**{row['STATE']}**: {row['display']}" for _, row in top_states.iterrows()])
-    bottom_list = " • ".join([f"**{row['STATE']}**: {row['display']}" for _, row in bottom_states.iterrows()])
+    top_list = " • ".join([f"{row['STATE']}: {row['display']}" for _, row in top_states.iterrows()])
+    bottom_list = " • ".join([f"{row['STATE']}: {row['display']}" for _, row in bottom_states.iterrows()])
     
     # === BEAUTIFUL DYNAMIC CAPTION ===
     st.markdown(f"""
