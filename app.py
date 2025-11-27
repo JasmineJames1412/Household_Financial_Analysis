@@ -210,7 +210,7 @@ if section == "🌐 Dashboard Overview":
     fig = px.choropleth(state_summary,
                         geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
                         featureidkey="properties.ST_NM",
-                        locations='state_clean',
+                        locations='State',
                         color=color_col,
                         hover_name='STATE',
                         hover_data={'TOTAL_INCOME': ':,.0f', 'TOTAL_EXPENDITURE': ':,.0f', 'Savings': ':,.0f', 'Savings_Rate': ':.1f'},
