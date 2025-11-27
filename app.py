@@ -171,12 +171,12 @@ if section == "🌐 Dashboard Overview":
     
     # FIXED INNOVATION 4: WORKING INDIA MAP
     st.subheader("Geographic Financial Stress Map")
-
+    
     state_summary = df_clean.groupby('STATE').agg({
         'TOTAL_INCOME': 'mean',
         'TOTAL_EXPENDITURE': 'mean',
         'REGION_TYPE': lambda x: (x=='URBAN').mean(),
-        'SIZE_GROUP': lambda x: x.value_counts().index[0],  # most common size
+        'SIZE_GROUP': lambda x: x.value_counts().index[0] if len(x) > 0 else 'Unknown',
         'HH_WEIGHT_MS': 'count'
     }).round(0)
     
@@ -195,8 +195,9 @@ if section == "🌐 Dashboard Overview":
         'Orissa': 'Odisha',
         'Uttaranchal': 'Uttarakhand'
     }
+    state_summary = state_summary.reset_index()
     state_summary['state_clean'] = state_summary['STATE'].replace(name_fix)
-
+    
     metric = st.radio("Color map by:", 
                       ["Average Monthly Savings (₹)", "Savings Rate (%)", "Average Income (₹)"], 
                       horizontal=True, index=0)
@@ -205,13 +206,13 @@ if section == "🌐 Dashboard Overview":
                  'Savings Rate (%)': 'Savings_Rate', 
                  'Average Income (₹)': 'TOTAL_INCOME'}[metric]
     
-    fig = px.choropleth(state_summary.reset_index(),
+    fig = px.choropleth(state_summary,
                         geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
                         featureidkey="properties.ST_NM",
                         locations='state_clean',
                         color=color_col,
                         hover_name='STATE',
-                        hover_data={'TOTAL_INCOME': ':,.0f', 'TOTAL_EXPENDITURE': ':,.0f', 'Savings': ':,.0f', 'Savings_Rate': ':.1f%'},
+                        hover_data={'TOTAL_INCOME': ':,.0f', 'TOTAL_EXPENDITURE': ':,.0f', 'Savings': ':,.0f', 'Savings_Rate': ':.1f'},
                         color_continuous_scale="RdYlGn" if "Savings" in metric else "Viridis",
                         title=f"India — {metric} (2022)")
     fig.update_geos(fitbounds="locations", visible=False)
@@ -219,6 +220,7 @@ if section == "🌐 Dashboard Overview":
     st.plotly_chart(fig, use_container_width=True)
     
     st.success("Meghalaya has the highest savings rate in India • Chhattisgarh & Jharkhand have negative savings → matches thesis findings")
+    
     # INNOVATION 5: Quick Insights Cards
     st.subheader("💡 Automated Intelligence Insights")
     
