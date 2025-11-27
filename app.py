@@ -364,7 +364,7 @@ elif section == "💰 Financial Analysis":
     # === RURAL–URBAN WITHIN STATE (YOUR THESIS KILLER FEATURE) ===
     else:  # Rural–Urban Within State
         selected_state = st.selectbox("Select State to Compare Rural vs Urban:", sorted(temp_df['STATE'].unique()))
-        state_data = temp_df[temp_df[temp_df['STATE'] == selected_state]
+        state_data = temp_df[temp_df[temp_df['STATE']] == selected_state]
         
         st.subheader(f"Rural vs Urban Financial Health — {selected_state}")
         
