@@ -532,7 +532,9 @@ elif section == "🏙️ Regional Intelligence":
         d2 = df_clean[df_clean['STATE'] == state2]
 
         # Calculate metrics safely
-        def safe_mean(series): return series.mean() if len(series) > 0 else 0
+        def safe_mean(series): 
+            return series.mean() if len(series) > 0 else 0
+        
         def safe_savings_rate(data):
             inc = safe_mean(data['TOTAL_INCOME'])
             exp = safe_mean(data['TOTAL_EXPENDITURE'])
@@ -632,7 +634,7 @@ elif section == "🏙️ Regional Intelligence":
         rank_df,
         geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
         featureidkey="properties.ST_NM",
-        locations='State_Clean',
+        locations='State',
         color='Performance_Score',
         hover_name='STATE',
         hover_data={'Rank': True, 'Performance_Score': ':.0f'},
@@ -652,18 +654,6 @@ elif section == "🏙️ Regional Intelligence":
     st.caption("Performance Score = 40% Income + 60% Savings Rate (weighted composite index)")
 
     st.success("Regional Intelligence Complete — Now with Radar Comparison + National Ranking!")
-        
-        # INNOVATION 5: Competitive positioning
-        st.subheader("🎯 Competitive Positioning")
-        
-        income_ratio = comparison_df[comparison_df['Metric'] == 'Avg Income'][state1].values[0] / comparison_df[comparison_df['Metric'] == 'Avg Income'][state2].values[0]
-        
-        if income_ratio > 1.2:
-            st.success(f"🚀 **{state1} has strong economic advantage** over {state2}")
-        elif income_ratio > 0.8:
-            st.info(f"⚖️ **{state1} and {state2} are economically comparable**")
-        else:
-            st.warning(f"📉 **{state1} lags behind {state2} economically**")
 
 # Update existing sections to include "Intelligence" in titles and add insights
 elif section == "📈 Income Dynamics":
