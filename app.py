@@ -231,38 +231,38 @@ fig.update_layout(height=600)
 st.plotly_chart(fig, use_container_width=True)
     
 # INNOVATION 5: Quick Insights Cards
-    st.subheader("💡 Automated Intelligence Insights")
+st.subheader("💡 Automated Intelligence Insights")
     
-    col1, col2 = st.columns(2)
+col1, col2 = st.columns(2)
     
-    with col1:
-        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-        st.markdown("#### 🎯 Top Opportunity")
-        highest_income_state = state_summary.loc[state_summary['Avg_Income'].idxmax(), 'STATE']
-        st.write(f"**{highest_income_state}** leads with highest average income")
-        st.write("*Recommendation: Study successful economic policies*")
-        st.markdown('</div>', unsafe_allow_html=True)
+with col1:
+    st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
+    st.markdown("#### 🎯 Top Opportunity")
+    highest_income_state = state_summary.loc[state_summary['Avg_Income'].idxmax(), 'STATE']
+    st.write(f"**{highest_income_state}** leads with highest average income")
+    st.write("*Recommendation: Study successful economic policies*")
+    st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-        st.markdown("#### ⚠️ Challenge Area")
-        lowest_savings_state = state_summary.loc[state_summary['Income_Expenditure_Ratio'].idxmin(), 'STATE']
-        st.write(f"**{lowest_savings_state}** shows lowest savings capacity")
-        st.write("*Recommendation: Focus on cost-of-living interventions*")
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
+    st.markdown("#### ⚠️ Challenge Area")
+    lowest_savings_state = state_summary.loc[state_summary['Income_Expenditure_Ratio'].idxmin(), 'STATE']
+    st.write(f"**{lowest_savings_state}** shows lowest savings capacity")
+    st.write("*Recommendation: Focus on cost-of-living interventions*")
+    st.markdown('</div>', unsafe_allow_html=True)
     
-    with col2:
-        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-        st.markdown("#### 📈 Growth Engine")
-        st.write("**Wage income contributes 73%** to total household earnings")
-        st.write("*Insight: Labor market development is crucial*")
-        st.markdown('</div>', unsafe_allow_html=True)
+with col2:
+    st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
+    st.markdown("#### 📈 Growth Engine")
+    st.write("**Wage income contributes 73%** to total household earnings")
+    st.write("*Insight: Labor market development is crucial*")
+    st.markdown('</div>', unsafe_allow_html=True)
         
-        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-        st.markdown("#### 🏘️ Regional Focus")
-        urban_rural_gap = state_summary['Urbanization_Rate'].std() * 100
-        st.write(f"**{urban_rural_gap:.1f}% variability** in urbanization rates")
-        st.write("*Insight: Need region-specific strategies*")
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
+    st.markdown("#### 🏘️ Regional Focus")
+    urban_rural_gap = state_summary['Urbanization_Rate'].std() * 100
+    st.write(f"**{urban_rural_gap:.1f}% variability** in urbanization rates")
+    st.write("*Insight: Need region-specific strategies*")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # INNOVATION 6: ENHANCED FINANCIAL ANALYSIS WITH PREDICTIVE INSIGHTS
 elif section == "💰 Financial Analysis":
