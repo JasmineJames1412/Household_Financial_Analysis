@@ -658,9 +658,10 @@ elif section == "🏙️ Regional Intelligence":
 # Update existing sections to include "Intelligence" in titles and add insights
 elif section == "📈 Income Dynamics":
     st.markdown('<div class="section-header">📈 Income Source Intelligence</div>', unsafe_allow_html=True)
+elif section == "📈 Income Dynamics":
+    st.markdown('<div class="section-header">📈 Income Source Intelligence</div>', unsafe_allow_html=True)
     
     # === SAFE APPROACH: ONLY USE COLUMNS THAT ACTUALLY EXIST ===
-    # Define potential income columns that might be in the dataset
     potential_income_cols = [
         'INCOME_OF_ALL_MEMBERS_FROM_WAGES', 'INCOME_OF_ALL_MEMBERS_FROM_PENSION',
         'INCOME_OF_ALL_MEMBERS_FROM_DIVIDEND', 'INCOME_OF_ALL_MEMBERS_FROM_INTEREST',
@@ -708,58 +709,86 @@ elif section == "📈 Income Dynamics":
     # Create the income dataframe with only existing columns
     df_income = df_clean[required_cols].copy()
 
-    # === INTERACTIVE CONTROLS ===
+    # === SIMPLIFIED SELECTOR SYSTEM (LIKE FINANCIAL ANALYSIS) ===
     col1, col2, col3 = st.columns([1, 1, 1])
     
     with col1:
-        view_mode = st.radio("View Mode:", ["National Average", "State-Level", "Rural vs Urban"], horizontal=True)
+        geography_level = st.radio(
+            "Geography Level:",
+            ["National", "State-Level"],
+            horizontal=True
+        )
     
     with col2:
-        if view_mode == "State-Level":
-            selected_state = st.selectbox("Select State:", ["All India"] + sorted(df_clean['STATE'].unique()))
+        if geography_level == "State-Level":
+            selected_state = st.selectbox("Select State:", sorted(df_clean['STATE'].unique()))
         else:
             selected_state = "All India"
+            st.info("🇮🇳 National Analysis")
     
     with col3:
-        chart_type = st.radio("Chart Type:", ["Stacked Bar", "Grouped Bar", "100% Stacked"], horizontal=True)
+        view_type = st.radio(
+            "View Type:",
+            ["All", "Urban-Rural Split"],
+            horizontal=True
+        )
 
     # === DATA FILTERING ===
-    if selected_state != "All India":
-        data = df_income[df_income['STATE'] == selected_state]
-        title_geo = selected_state
-    else:
-        data = df_income
+    if geography_level == "National":
+        analysis_data = df_income
         title_geo = "All India"
+    else:
+        analysis_data = df_income[df_income['STATE'] == selected_state]
+        title_geo = selected_state
 
-    # === CALCULATE SHARES (WEIGHTED FOR ACCURACY) ===
+    # === MAIN VISUALIZATION - ALWAYS GROUPED BAR CHART ===
+    st.subheader(f"Income Source Composition — {title_geo}")
+
     # Only use columns that exist in the filtered data
-    available_income_cols = [col for col in existing_income_cols if col in data.columns]
+    available_income_cols = [col for col in existing_income_cols if col in analysis_data.columns]
     
     if len(available_income_cols) == 0:
         st.error("❌ No income data available for the selected filters.")
         st.stop()
-    
-    # Calculate weighted sums
-    weighted_sums = data[available_income_cols].multiply(data['HH_WEIGHT_MS'], axis=0).sum()
-    total_weighted_income = weighted_sums.sum()
-    
-    if total_weighted_income > 0:
-        shares = (weighted_sums / total_weighted_income * 100).round(1)
-    else:
-        shares = pd.Series([0] * len(available_income_cols), index=available_income_cols)
-    
-    shares_df = shares.reset_index()
-    shares_df.columns = ['Source_Code', 'Share']
-    shares_df['Source'] = shares_df['Source_Code'].map(income_labels)
-    shares_df = shares_df.sort_values('Share', ascending=False)
 
-    # === RURAL-URBAN BREAKDOWN (ONLY WHEN SELECTED) ===
-    if view_mode == "Rural vs Urban" and selected_state == "All India":
-        rural = df_income[df_income['REGION_TYPE'] == 'RURAL']
-        urban = df_income[df_income['REGION_TYPE'] == 'URBAN']
+    if view_type == "All":
+        # Single grouped bar chart for all data
+        weighted_sums = analysis_data[available_income_cols].multiply(analysis_data['HH_WEIGHT_MS'], axis=0).sum()
+        total_weighted_income = weighted_sums.sum()
+        
+        if total_weighted_income > 0:
+            shares = (weighted_sums / total_weighted_income * 100).round(1)
+        else:
+            shares = pd.Series([0] * len(available_income_cols), index=available_income_cols)
+        
+        shares_df = shares.reset_index()
+        shares_df.columns = ['Source_Code', 'Share']
+        shares_df['Source'] = shares_df['Source_Code'].map(income_labels)
+        shares_df = shares_df.sort_values('Share', ascending=False)
 
-        rural_sums = rural[available_income_cols].multiply(rural['HH_WEIGHT_MS'], axis=0).sum()
-        urban_sums = urban[available_income_cols].multiply(urban['HH_WEIGHT_MS'], axis=0).sum()
+        # Grouped bar chart for "All" view
+        fig = px.bar(shares_df, x='Source', y='Share',
+                     title=f"Income Source Composition — {title_geo}",
+                     color='Share',
+                     color_continuous_scale="Viridis",
+                     text='Share')
+        fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+        fig.update_layout(xaxis_tickangle=45, height=600, showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Top 3 sources
+        top3 = shares_df.head(3)
+        st.info(f"**Top 3 Income Sources in {title_geo}:**\n" + 
+                "\n".join([f"• {row['Source']}: **{row['Share']}**%" for _, row in top3.iterrows()]))
+
+    else:  # Urban-Rural Split
+        # Grouped bar chart comparing Rural vs Urban
+        rural_data = analysis_data[analysis_data['REGION_TYPE'] == 'RURAL']
+        urban_data = analysis_data[analysis_data['REGION_TYPE'] == 'URBAN']
+
+        # Calculate weighted shares for rural and urban
+        rural_sums = rural_data[available_income_cols].multiply(rural_data['HH_WEIGHT_MS'], axis=0).sum()
+        urban_sums = urban_data[available_income_cols].multiply(urban_data['HH_WEIGHT_MS'], axis=0).sum()
 
         rural_total = rural_sums.sum()
         urban_total = urban_sums.sum()
@@ -774,89 +803,97 @@ elif section == "📈 Income Dynamics":
         else:
             urban_share = pd.Series([0] * len(available_income_cols), index=available_income_cols)
 
-        plot_df = pd.DataFrame({
-            'Source': [income_labels[col] for col in available_income_cols],
-            'Rural (%)': [rural_share.get(col, 0) for col in available_income_cols],
-            'Urban (%)': [urban_share.get(col, 0) for col in available_income_cols]
-        }).sort_values('Rural (%)', ascending=False)
+        # Prepare data for grouped bar chart
+        plot_data = []
+        for col in available_income_cols:
+            source_name = income_labels[col]
+            plot_data.append({
+                'Source': source_name,
+                'Region': 'Rural',
+                'Share': rural_share.get(col, 0)
+            })
+            plot_data.append({
+                'Source': source_name,
+                'Region': 'Urban', 
+                'Share': urban_share.get(col, 0)
+            })
+        
+        plot_df = pd.DataFrame(plot_data)
+        plot_df = plot_df.sort_values('Share', ascending=False)
 
-        # === FINAL PLOT ===
-        if chart_type == "100% Stacked":
-            fig = px.bar(plot_df, x='Source', y=['Rural (%)', 'Urban (%)'],
-                         title=f"Income Sources: Rural vs Urban India (100% Stacked)",
-                         color_discrete_sequence=['#FF6B6B', '#4ECDC4'],
-                         barmode='stack')
-            fig.update_layout(xaxis_tickangle=45, height=600)
-        elif chart_type == "Grouped Bar":
-            fig = px.bar(plot_df, x='Source', y=['Rural (%)', 'Urban (%)'],
-                         title=f"Income Sources: Rural vs Urban India",
-                         barmode='group', color_discrete_sequence=['#FF6B6B', '#4ECDC4'])
-            fig.update_layout(xaxis_tickangle=45, height=600)
-        else:  # Stacked Bar
-            fig = px.bar(plot_df.melt(id_vars='Source', value_vars=['Rural (%)', 'Urban (%)']),
-                         x='Source', y='value', color='variable',
-                         title=f"Income Sources: Rural vs Urban India",
-                         barmode='stack', color_discrete_sequence=['#FF6B6B', '#4ECDC4'])
-            fig.update_layout(xaxis_tickangle=45, height=600)
-
+        # Create grouped bar chart
+        fig = px.bar(plot_df, x='Source', y='Share', color='Region',
+                     title=f"Income Sources: Rural vs Urban — {title_geo}",
+                     barmode='group',
+                     color_discrete_map={'Rural': '#FF6B6B', 'Urban': '#4ECDC4'},
+                     text='Share')
+        fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+        fig.update_layout(xaxis_tickangle=45, height=600)
         st.plotly_chart(fig, use_container_width=True)
 
-        # Insight - only show if data exists
-        if len(plot_df) > 0:
-            wage_data = plot_df[plot_df['Source'] == 'Wages & Salaries']
-            govt_data = plot_df[plot_df['Source'] == 'Government Transfers']
-            rent_data = plot_df[plot_df['Source'] == 'Rental Income']
-            
-            wage_rural = wage_data['Rural (%)'].iloc[0] if len(wage_data) > 0 else 0
-            wage_urban = wage_data['Urban (%)'].iloc[0] if len(wage_data) > 0 else 0
-            govt_rural = govt_data['Rural (%)'].iloc[0] if len(govt_data) > 0 else 0
-            rent_urban = rent_data['Urban (%)'].iloc[0] if len(rent_data) > 0 else 0
+        # Auto-insights for Rural vs Urban comparison
+        if len(available_income_cols) > 0:
+            wage_rural = rural_share.get('INCOME_OF_ALL_MEMBERS_FROM_WAGES', 0)
+            wage_urban = urban_share.get('INCOME_OF_ALL_MEMBERS_FROM_WAGES', 0)
+            govt_rural = rural_share.get('INCOME_OF_HOUSEHOLD_FROM_GOVERNMENT_TRANSFERS', 0)
+            rent_urban = urban_share.get('INCOME_OF_HOUSEHOLD_FROM_RENT', 0)
 
             st.success(f"""
             **Key Insights (Rural vs Urban):**
-            - Rural India depends **{wage_rural:.1f}%** on wages vs **{wage_urban:.1f}%** in urban
-            - Government transfers = **{govt_rural:.1f}%** of rural income (lifeline!)
-            - Urban India earns **{rent_urban:.1f}%** from rent (asset inequality)
+            - Rural depends **{wage_rural:.1f}%** on wages vs **{wage_urban:.1f}%** in urban
+            - Government transfers = **{govt_rural:.1f}%** of rural income
+            - Urban earns **{rent_urban:.1f}%** from rent (asset advantage)
             """)
 
-    else:
-        # === SINGLE BAR CHART (NATIONAL OR STATE) ===
-        if len(shares_df) > 0:
-            fig = px.bar(shares_df, x='Source', y='Share',
-                         title=f"Income Source Composition — {title_geo}",
-                         color='Share',
-                         color_continuous_scale="Viridis",
-                         text='Share')
-            fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
-            fig.update_layout(xaxis_tickangle=45, height=600, showlegend=False)
-            st.plotly_chart(fig, use_container_width=True)
-
-            # Top 3 sources
-            top3 = shares_df.head(3)
-            st.info(f"**Top 3 Income Sources in {title_geo}:**\n" + 
-                    "\n".join([f"• {row['Source']}: **{row['Share']}**%" for _, row in top3.iterrows()]))
-        else:
-            st.warning("No income source data available for the selected filters.")
-
-    # === FINAL INNOVATION: DEPENDENCY INDEX ===
+    # === KEY METRICS DASHBOARD ===
     st.markdown("---")
-    st.subheader("Income Dependency Profile")
+    st.subheader(f"Income Dependency Profile — {title_geo}")
     
-    wage_share = shares.get('INCOME_OF_ALL_MEMBERS_FROM_WAGES', 0)
-    govt_share = shares.get('INCOME_OF_HOUSEHOLD_FROM_GOVERNMENT_TRANSFERS', 0) + shares.get('INCOME_OF_HOUSEHOLD_FROM_IN_KIND_TRANSFERS_FROM_GOVERNMENT', 0)
-    self_prod_share = shares.get('INCOME_OF_HOUSEHOLD_FROM_SELF_PRODUCTION', 0)
-
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Wage Dependency", f"{wage_share:.1f}%", delta=None)
-    with col2:
-        st.metric("Govt Dependency", f"{govt_share:.1f}%", delta="Critical for Rural Poor")
-    with col3:
-        st.metric("Self-Production (Farming)", f"{self_prod_share:.1f}%", delta="Vulnerable to Shocks")
-
-    st.success("Income Intelligence Engine Complete — Now with Rural/Urban + State-Level + Interactive Charts!")
+    # Calculate dependency metrics
+    if view_type == "All":
+        wage_share = weighted_sums.get('INCOME_OF_ALL_MEMBERS_FROM_WAGES', 0) / total_weighted_income * 100 if total_weighted_income > 0 else 0
+        govt_share = (weighted_sums.get('INCOME_OF_HOUSEHOLD_FROM_GOVERNMENT_TRANSFERS', 0) + 
+                     weighted_sums.get('INCOME_OF_HOUSEHOLD_FROM_IN_KIND_TRANSFERS_FROM_GOVERNMENT', 0)) / total_weighted_income * 100 if total_weighted_income > 0 else 0
+        self_prod_share = weighted_sums.get('INCOME_OF_HOUSEHOLD_FROM_SELF_PRODUCTION', 0) / total_weighted_income * 100 if total_weighted_income > 0 else 0
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Wage Dependency", f"{wage_share:.1f}%", delta=None)
+        with col2:
+            st.metric("Govt Dependency", f"{govt_share:.1f}%", delta="Critical for Rural Poor")
+        with col3:
+            st.metric("Self-Production", f"{self_prod_share:.1f}%", delta="Vulnerable to Shocks")
     
-    # INNOVATION 6: Income Mobility Analysis
+    else:
+        # Rural-Urban comparison metrics
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            rural_wage = rural_share.get('INCOME_OF_ALL_MEMBERS_FROM_WAGES', 0)
+            urban_wage = urban_share.get('INCOME_OF_ALL_MEMBERS_FROM_WAGES', 0)
+            st.metric("Wage Dependency", 
+                     f"{rural_wage:.1f}%", 
+                     f"{urban_wage:.1f}% (Urban)",
+                     delta_color="off")
+        
+        with col2:
+            rural_govt = rural_share.get('INCOME_OF_HOUSEHOLD_FROM_GOVERNMENT_TRANSFERS', 0)
+            urban_govt = urban_share.get('INCOME_OF_HOUSEHOLD_FROM_GOVERNMENT_TRANSFERS', 0)
+            st.metric("Govt Dependency", 
+                     f"{rural_govt:.1f}%", 
+                     f"{urban_govt:.1f}% (Urban)",
+                     delta_color="off")
+        
+        with col3:
+            rural_self = rural_share.get('INCOME_OF_HOUSEHOLD_FROM_SELF_PRODUCTION', 0)
+            urban_self = urban_share.get('INCOME_OF_HOUSEHOLD_FROM_SELF_PRODUCTION', 0)
+            st.metric("Self-Production", 
+                     f"{rural_self:.1f}%", 
+                     f"{urban_self:.1f}% (Urban)",
+                     delta_color="off")
+
+    # === INCOME MOBILITY ANALYSIS ===
+    st.markdown("---")
     st.subheader("📊 Income Mobility Predictors")
     
     col1, col2, col3 = st.columns(3)
@@ -866,6 +903,8 @@ elif section == "📈 Income Dynamics":
         st.metric("Occupation Boost", "+42%", "Professional advantage")
     with col3:
         st.metric("Regional Factor", "+58%", "Urban premium")
+
+    st.success("Income Intelligence Engine Complete — 4 analysis combinations: National/State × All/Urban-Rural")
         
 # Enhanced existing sections
 elif section == "🛒 Spending Patterns":
