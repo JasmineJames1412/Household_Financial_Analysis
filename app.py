@@ -322,7 +322,7 @@ elif section == "💰 Financial Analysis":
             color_discrete_map=colors,
             hole=0.4
         )
-        fig_pie.update_traces(textinfo='percent+label', textposition='inside')
+        fig_pie.update_traces(textinfo='percent+label', textposition='outside')
         st.plotly_chart(fig_pie, use_container_width=True)
     
     with col2:
