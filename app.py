@@ -674,12 +674,6 @@ elif section == "📈 Income Dynamics":
     # Filter to only include columns that actually exist in the dataset
     existing_income_cols = [col for col in potential_income_cols if col in df_clean.columns]
     
-    if not existing_income_cols:
-        st.error("❌ No income columns found in the dataset. Please check your data.")
-        st.stop()
-    
-    st.info(f"📊 Found {len(existing_income_cols)} income source columns in the dataset")
-    
     # Define readable labels for the income columns
     income_labels = {
         'INCOME_OF_ALL_MEMBERS_FROM_WAGES': 'Wages & Salaries',
@@ -722,7 +716,7 @@ elif section == "📈 Income Dynamics":
             selected_state = st.selectbox("Select State:", sorted(df_clean['STATE'].unique()))
         else:
             selected_state = "All India"
-            st.info("🇮🇳 National Analysis")
+            st.info("National Analysis")
     
     with col3:
         view_type = st.radio(
