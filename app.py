@@ -1077,7 +1077,7 @@ elif section == "🛒 Spending Patterns":
     with col4:
         st.metric("Lifestyle Spending", f"{restaurant_share:.1f}%", delta="Rising Middle Class")
 
-    st.success("Consumer Spending Intelligence Engine Complete — Fully Consistent with Income Module | 4 Analysis Modes | Policy-Ready Insights"))
+    st.success("Consumer Spending Intelligence Engine Complete — Fully Consistent with Income Module | 4 Analysis Modes | Policy-Ready Insights")
 
 elif section == "👥 Demographic Insights":
     st.markdown('<div class="section-header">👥 Demographic Intelligence Engine</div>', unsafe_allow_html=True)
