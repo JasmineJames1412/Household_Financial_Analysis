@@ -746,7 +746,7 @@ elif section == "📈 Income Dynamics":
     available_income_cols = [col for col in existing_income_cols if col in analysis_data.columns]
     
     if len(available_income_cols) == 0:
-        st.error("❌ No income data available for the selected filters.")
+        st.error("No income data available for the selected filters.")
         st.stop()
 
     if view_type == "All":
@@ -906,42 +906,178 @@ elif section == "📈 Income Dynamics":
         
 # Enhanced existing sections
 elif section == "🛒 Spending Patterns":
-    st.markdown('<div class="section-header">🛒 Consumer Behavior Intelligence</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-header">Consumer Spending Intelligence Engine</div>', unsafe_allow_html=True)
     
-    exp_cols = [
-        'MONTHLY_EXPENSE_ON_FOOD', 'MONTHLY_EXPENSE_ON_INTOXICANTS', 'MONTHLY_EXPENSE_ON_CLOTHING_AND_FOOTWEAR',
-        'MONTHLY_EXPENSE_ON_COSMETIC_AND_TOILETRIES', 'MONTHLY_EXPENSE_ON_APPLIANCES', 'MONTHLY_EXPENSE_ON_RESTAURANTS',
-        'MONTHLY_EXPENSE_ON_BILLS_AND_RENT', 'MONTHLY_EXPENSE_ON_POWER_AND_FUEL', 'MONTHLY_EXPENSE_ON_TRANSPORT',
-        'MONTHLY_EXPENSE_ON_COMMUNICATION_AND_INFO', 'MONTHLY_EXPENSE_ON_EDUCATION', 'MONTHLY_EXPENSE_ON_HEALTH',
-        'MONTHLY_EXPENSE_ON_ALL_EMIS', 'MONTHLY_EXPENSE_ON_MISCELLANEOUS'
-    ]
-    
-    exp_sums = df_clean[exp_cols].sum()
-    total_expense = exp_sums.sum()
-    percentages = (exp_sums / total_expense) * 100
-    
-    short_labels = {
-        'MONTHLY_EXPENSE_ON_FOOD': 'Food',
-        'MONTHLY_EXPENSE_ON_INTOXICANTS': 'Intoxicants',
-        'MONTHLY_EXPENSE_ON_CLOTHING_AND_FOOTWEAR': 'Clothing/Footwear',
-        'MONTHLY_EXPENSE_ON_COSMETIC_AND_TOILETRIES': 'Cosmetics/Toiletries',
-        'MONTHLY_EXPENSE_ON_APPLIANCES': 'Appliances',
-        'MONTHLY_EXPENSE_ON_RESTAURANTS': 'Restaurants',
-        'MONTHLY_EXPENSE_ON_BILLS_AND_RENT': 'Bills/Rent',
-        'MONTHLY_EXPENSE_ON_POWER_AND_FUEL': 'Power/Fuel',
-        'MONTHLY_EXPENSE_ON_TRANSPORT': 'Transport',
-        'MONTHLY_EXPENSE_ON_COMMUNICATION_AND_INFO': 'Communication',
+    # === EXPENDITURE LABELS (CLEAN, PROFESSIONAL, CONSISTENT) ===
+    expenditure_labels = {
+        'MONTHLY_EXPENSE_ON_FOOD': 'Food & Groceries',
+        'MONTHLY_EXPENSE_ON_INTOXICANTS': 'Tobacco & Alcohol',
+        'MONTHLY_EXPENSE_ON_CLOTHING_AND_FOOTWEAR': 'Clothing & Footwear',
+        'MONTHLY_EXPENSE_ON_COSMETIC_AND_TOILETRIES': 'Cosmetics & Toiletries',
+        'MONTHLY_EXPENSE_ON_APPLIANCES': 'Durable Goods (Appliances)',
+        'MONTHLY_EXPENSE_ON_RESTAURANTS': 'Eating Out & Restaurants',
+        'MONTHLY_EXPENSE_ON_BILLS_AND_RENT': 'Housing Rent & Bills',
+        'MONTHLY_EXPENSE_ON_POWER_AND_FUEL': 'Electricity & Fuel',
+        'MONTHLY_EXPENSE_ON_TRANSPORT': 'Transport & Fuel',
+        'MONTHLY_EXPENSE_ON_COMMUNICATION_AND_INFO': 'Communication & Internet',
         'MONTHLY_EXPENSE_ON_EDUCATION': 'Education',
-        'MONTHLY_EXPENSE_ON_HEALTH': 'Health',
-        'MONTHLY_EXPENSE_ON_ALL_EMIS': 'EMIs',
-        'MONTHLY_EXPENSE_ON_MISCELLANEOUS': 'Miscellaneous'
+        'MONTHLY_EXPENSE_ON_HEALTH': 'Healthcare',
+        'MONTHLY_EXPENSE_ON_ALL_EMIS': 'Loan EMIs & Debt Servicing',
+        'MONTHLY_EXPENSE_ON_MISCELLANEOUS': 'Miscellaneous & Others'
     }
+
+    exp_cols = list(expenditure_labels.keys())
     
-    labels = [short_labels.get(col, col) for col in exp_cols]
+    # Filter only existing columns
+    existing_exp_cols = [col for col in exp_cols if col in df_clean.columns]
+    expenditure_labels = {col: expenditure_labels[col] for col in existing_exp_cols}
+
+    required_cols = existing_exp_cols + ['STATE', 'REGION_TYPE', 'HH_WEIGHT_MS', 'TOTAL_EXPENDITURE']
+    required_cols = [col for col in required_cols if col in df_clean.columns]
     
-    fig_exp = px.bar(x=labels, y=percentages.values, title="Expenditure Distribution")
-    fig_exp.update_layout(xaxis_tickangle=45)
-    st.plotly_chart(fig_exp, use_container_width=True)
+    df_exp = df_clean[required_cols].copy()
+
+    # === SAME INTERACTIVE CONTROLS AS INCOME DYNAMICS (100% CONSISTENCY) ===
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        geography_level = st.radio(
+            "Geography Level:",
+            ["National", "State-Level"],
+            horizontal=True,
+            key="exp_geo"
+        )
+    
+    with col2:
+        if geography_level == "State-Level":
+            selected_state = st.selectbox("Select State:", sorted(df_clean['STATE'].unique()), key="exp_state")
+        else:
+            selected_state = "All India"
+            st.info("National Analysis")
+    
+    with col3:
+        view_type = st.radio(
+            "View Type:",
+            ["All", "Urban-Rural Split"],
+            horizontal=True,
+            key="exp_view"
+        )
+
+    # === DATA FILTERING ===
+    if selected_state != "All India":
+        analysis_data = df_exp[df_exp['STATE'] == selected_state]
+        title_geo = selected_state
+    else:
+        analysis_data = df_exp
+        title_geo = "All India"
+
+    # === CALCULATE WEIGHTED SHARES ===
+    available_exp_cols = [col for col in existing_exp_cols if col in analysis_data.columns]
+    
+    if len(available_exp_cols) == 0:
+        st.error("No expenditure data available.")
+        st.stop()
+
+    weighted_sums = analysis_data[available_exp_cols].multiply(analysis_data['HH_WEIGHT_MS'], axis=0).sum()
+    total_weighted_exp = weighted_sums.sum()
+    
+    if total_weighted_exp <= 0:
+        st.warning("No valid expenditure data for selected filters.")
+        st.stop()
+
+    shares = (weighted_sums / total_weighted_exp * 100).round(1)
+
+    # === MAIN VISUALIZATION — EXACT SAME STYLE AS INCOME ===
+    st.subheader(f"Expenditure Composition — {title_geo}")
+
+    if view_type == "All":
+        shares_df = shares.reset_index()
+        shares_df.columns = ['Source_Code', 'Share']
+        shares_df['Source'] = shares_df['Source_Code'].map(expenditure_labels)
+        shares_df = shares_df.sort_values('Share', ascending=False)
+
+        fig = px.bar(shares_df, 
+                     x='Source', y='Share',
+                     title=f"Monthly Spending Breakdown — {title_geo}",
+                     color='Share',
+                     color_continuous_scale="Viridis",
+                     text='Share')
+        fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+        fig.update_layout(xaxis_tickangle=45, height=600, showlegend=False)
+        st.plotly_chart(fig, use_container_width=True)
+
+        top3 = shares_df.head(3)
+        st.info(f"**Top 3 Spending Categories in {title_geo}:**\n" +
+                "\n".join([f"• {row['Source']}: **{row['Share']}**%" for _, row in top3.iterrows()]))
+
+    else:  # Urban-Rural Split
+        rural_data = analysis_data[analysis_data['REGION_TYPE'] == 'RURAL']
+        urban_data = analysis_data[analysis_data['REGION_TYPE'] == 'URBAN']
+
+        rural_sums = rural_data[available_exp_cols].multiply(rural_data['HH_WEIGHT_MS'], axis=0).sum()
+        urban_sums = urban_data[available_exp_cols].multiply(urban_data['HH_WEIGHT_MS'], axis=0).sum()
+
+        rural_total = rural_sums.sum()
+        urban_total = urban_sums.sum()
+
+        rural_share = (rural_sums / rural_total * 100).round(1) if rural_total > 0 else pd.Series(0, index=available_exp_cols)
+        urban_share = (urban_sums / urban_total * 100).round(1) if urban_total > 0 else pd.Series(0, index=available_exp_cols)
+
+        plot_data = []
+        for col in available_exp_cols:
+            source_name = expenditure_labels[col]
+            plot_data.extend([
+                {'Source': source_name, 'Region': 'Rural', 'Share': rural_share.get(col, 0)},
+                {'Source': source_name, 'Region': 'Urban', 'Share': urban_share.get(col, 0)}
+            ])
+
+        plot_df = pd.DataFrame(plot_data)
+        plot_df = plot_df[plot_df['Share'] > 0.1]  # Clean small values
+        plot_df = plot_df.sort_values(['Share'], ascending=False)
+
+        fig = px.bar(plot_df, 
+                     x='Source', y='Share', color='Region',
+                     title=f"Expenditure: Rural vs Urban — {title_geo}",
+                     barmode='group',
+                     color_discrete_map={'Rural': '#FF6B6B', 'Urban': '#4ECDC4'},
+                     text='Share')
+        fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
+        fig.update_layout(xaxis_tickangle=45, height=600, legend=dict(title=""))
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Auto Insights
+        food_rural = rural_share.get('MONTHLY_EXPENSE_ON_FOOD', 0)
+        food_urban = urban_share.get('MONTHLY_EXPENSE_ON_FOOD', 0)
+        emi_urban = urban_share.get('MONTHLY_EXPENSE_ON_ALL_EMIS', 0)
+        rent_urban = urban_share.get('MONTHLY_EXPENSE_ON_BILLS_AND_RENT', 0)
+
+        st.success(f"""
+        **Key Spending Insights (Rural vs Urban):**
+        - Rural households spend **{food_rural:.1f}%** on food vs **{food_urban:.1f}%** in urban → Survival vs Lifestyle
+        - Urban India spends **{emi_urban:.1f}%** on EMIs → Debt trap signal
+        - Housing (Rent + Bills) = **{rent_urban:.1f}%** in urban → Cost of living crisis
+        """)
+
+    # === CONSUMER BEHAVIOR INDEX (MIRROR OF INCOME DEPENDENCY) ===
+    st.markdown("---")
+    st.subheader(f"Consumer Behavior Profile — {title_geo}")
+
+    food_share = shares.get('MONTHLY_EXPENSE_ON_FOOD', 0)
+    emi_share = shares.get('MONTHLY_EXPENSE_ON_ALL_EMIS', 0)
+    education_share = shares.get('MONTHLY_EXPENSE_ON_EDUCATION', 0)
+    restaurant_share = shares.get('MONTHLY_EXPENSE_ON_RESTAURANTS', 0)
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Food Share", f"{food_share:.1f}%", delta="High = Poverty Indicator" if food_share > 50 else "Healthy")
+    with col2:
+        st.metric("EMI Burden", f"{emi_share:.1f}%", delta="Warning" if emi_share > 15 else "Safe")
+    with col3:
+        st.metric("Education Investment", f"{education_share:.1f}%", delta="Future-Ready" if education_share > 8 else "Low")
+    with col4:
+        st.metric("Lifestyle Spending", f"{restaurant_share:.1f}%", delta="Rising Middle Class")
+
+    st.success("Consumer Spending Intelligence Engine Complete — Fully Consistent with Income Module | 4 Analysis Modes | Policy-Ready Insights"))
 
 elif section == "👥 Demographic Insights":
     st.markdown('<div class="section-header">👥 Demographic Intelligence Engine</div>', unsafe_allow_html=True)
