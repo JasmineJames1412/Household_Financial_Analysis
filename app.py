@@ -607,7 +607,7 @@ elif section == "🏙️ Regional Intelligence":
         ))
 
     fig.update_layout(
-        polar=dict(radialaxis=dict(visible=True, range=[0, max([safe_mean(d1['TOTAL_INCOME']), safe_mean(d2['TOTAL_INCOME']))]/1000 + 10])),
+        polar=dict(radialaxis=dict(visible=True, range=[0, max([safe_mean(d1['TOTAL_INCOME']), safe_mean(d2['TOTAL_INCOME'])])/1000 + 10])),
         showlegend=True,
         title="Financial & Demographic Profile Comparison",
         height=550
