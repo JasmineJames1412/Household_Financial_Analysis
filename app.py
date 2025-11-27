@@ -239,25 +239,27 @@ if section == "🌐 Dashboard Overview":
     </div>
     """, unsafe_allow_html=True)
 
-    # Finally plot the map
-    fig = px.choropleth(state_summary,
-                        geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
-                        featureidkey="properties.ST_NM",
-                        locations='State',
-                        color=color_col,
-                        hover_name='STATE',
-                        hover_data={
-                            'TOTAL_INCOME': ':,.0f',
-                            'TOTAL_EXPENDITURE': ':,.0f', 
-                            'Savings': ':,.0f',
-                            'Savings_Rate': ':.1f'
-                        },
-                        color_continuous_scale=color_scale,
-                        title=f"India — {metric} (2022)",
-                        height=650)
+    # === FINAL MAP ===
+    fig = px.choropleth(
+        state_summary,
+        geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+        featureidkey="properties.ST_NM",
+        locations='State',
+        color=color_col,
+        hover_name='STATE',
+        hover_data={
+            'TOTAL_INCOME': ':,.0f',
+            'TOTAL_EXPENDITURE': ':,.0f',
+            'Savings': ':,.0f',
+            'Savings_Rate': ':.1f'
+        },
+        color_continuous_scale=color_scale,
+        title=f"India — {metric} (2022)",
+        height=700
+    )
     
     fig.update_geos(fitbounds="locations", visible=False)
-    fig.update_layout(margin={"r":0,"t":60,"l":0,"b":0}, title_x=0.5)
+    fig.update_layout(margin=dict(t=80, b=20), title_x=0.5, font=dict(size=14))
     
     st.plotly_chart(fig, use_container_width=True)
     
