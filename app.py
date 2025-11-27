@@ -195,7 +195,7 @@ if section == "🌐 Dashboard Overview":
         'Orissa': 'Odisha',
         'Uttaranchal': 'Uttarakhand'
     }
-    state_summary['state_clean'] = state_summary.index.map(name_fix).fillna(state_summary.index)
+    state_summary['state_clean'] = state_summary['STATE'].replace(name_fix)
 
     metric = st.radio("Color map by:", 
                       ["Average Monthly Savings (₹)", "Savings Rate (%)", "Average Income (₹)"], 
