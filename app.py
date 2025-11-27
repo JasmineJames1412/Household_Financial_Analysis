@@ -385,7 +385,7 @@ elif section == "💰 Financial Analysis":
         st.metric("National Savings Rate", f"{temp_df['Savings_Rate'].mean():.1f}%")
         st.metric("Avg. Debt Burden", f"{temp_df['Debt_Burden'].mean():.1f}%")
         st.metric("Food Share of Budget", f"{temp_df['Food_Share'].mean():.1f}%")
-        distress_national = (temp_df['Financial_Health'] == 'In Distress']).mean() * 100
+        distress_national = (temp_df['Financial_Health'] == 'In Distress').mean() * 100
         st.metric("Households in Distress", f"{distress_national:.1f}%", delta="High Risk")
 
         st.info("""
