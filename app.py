@@ -277,12 +277,12 @@ if section == "🌐 Dashboard Overview":
 elif section == "💰 Financial Analysis":  
     st.markdown('<div class="section-header">💰 Advanced Financial Intelligence Engine</div>', unsafe_allow_html=True)
     
-    # === SAFE CALCULATIONS ===
+    # === SAFE CALCULATIONS
     temp_df = df_clean.copy()
     temp_df['Savings'] = temp_df['TOTAL_INCOME'] - temp_df['TOTAL_EXPENDITURE']
-    temp_df['Savings_Rate'] = (temp_df['Savings'] / temp_df['TOTAL_INCOME']) * 100
-    temp_df['Debt_Burden'] = temp_df['MONTHLY_EXPENSE_ON_ALL_EMIS'] / temp_df['TOTAL_INCOME'] * 100
-    temp_df['Food_Share'] = temp_df['MONTHLY_EXPENSE_ON_FOOD'] / temp_df['TOTAL_EXPENDITURE'] * 100
+    temp_df['Savings_Rate'] = (temp_df['Savings'] / temp_df['TOTAL_INCOME'].replace(0, np.nan)) * 100
+    temp_df['Debt_Burden'] = temp_df['MONTHLY_EXPENSE_ON_ALL_EMIS'] / temp_df['TOTAL_INCOME'].replace(0, np.nan) * 100
+    temp_df['Food_Share'] = temp_df['MONTHLY_EXPENSE_ON_FOOD'] / temp_df['TOTAL_EXPENDITURE'].replace(0, np.nan) * 100
 
     def financial_health_score(row):
         score = 0
@@ -304,133 +304,130 @@ elif section == "💰 Financial Analysis":
 
     temp_df['Financial_Health'] = temp_df.apply(financial_health_score, axis=1)
 
-    # === USER CHOICE: National / State / Rural-Urban ===
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        view_mode = st.radio("View Financial Health By:", 
-                             ["National", "By State", "Rural vs Urban"], 
-                             horizontal=True, index=0)
-    with col2:
-        if view_mode == "By State":
-            selected_state = st.selectbox("Select State:", ["All India"] + sorted(df_clean['STATE'].unique()))
-        else:
-            selected_state = "All India"
+    # === SMART 3-LEVEL VIEW SELECTOR ===
+    view = st.radio(
+        "Financial Health Intelligence Level:",
+        ["National Overview", "State-Level Comparison", "Rural–Urban Within State"],
+        horizontal=True,
+        index=0
+    )
 
-    # === DATA FILTERING LOGIC ===
-    if view_mode == "By State" and selected_state != "All India":
-        data = temp_df[temp_df['STATE'] == selected_state]
-        title_suffix = f" — {selected_state}"
-    elif view_mode == "Rural vs Urban":
-        data = temp_df.copy()
-        title_suffix = " — Rural vs Urban Comparison"
-    else:
-        data = temp_df.copy()
-        title_suffix = " — National Overview"
-
-    # === PIE CHART — CLEAN & PROFESSIONAL ===
-    if view_mode == "Rural vs Urban":
-        health_by_region = data.groupby(['REGION_TYPE', 'Financial_Health']).size().unstack(fill_value=0)
-        health_by_region = health_by_region.div(health_by_region.sum(axis=1), axis=0) * 100
-        fig_pie = go.Figure()
-        colors = ['#00C853', '#64DD17', '#FF9800', '#F44336']
-        for i, region in enumerate(['RURAL', 'URBAN']):
-            values = health_by_region.loc[region] if region in health_by_region.index else [0,0,0,0]
-            fig_pie.add_trace(go.Pie(
-                labels=['Secure', 'Stable', 'Vulnerable', 'In Distress'],
-                values=values,
-                name=region,
-                hole=0.4,
-                marker_colors=colors,
-                textinfo='percent',
-                textposition='outside',
-                domain={'x': [0, 0.48] if i == 0 else [0.52, 1]}
-            ))
-        fig_pie.update_layout(
-            title=f"Financial Health: Rural vs Urban Households{title_suffix}",
-            legend=dict(font=dict(size=14), title="Health Status"),
-            height=500
-        )
-    else:
-        health_counts = data['Financial_Health'].value_counts(normalize=True) * 100
-        fig_pie = go.Figure(data=[go.Pie(
-            labels=health_counts.index,
-            values=health_counts.values,
-            hole=0.45,
+    # === NATIONAL OVERVIEW ===
+    if view == "National Overview":
+        st.subheader("India-Wide Financial Health")
+        health_national = temp_df['Financial_Health'].value_counts(normalize=True).mul(100).round(1)
+        
+        fig = go.Figure(data=[go.Pie(
+            labels=health_national.index,
+            values=health_national.values,
+            hole=0.5,
             marker_colors=['#00C853', '#64DD17', '#FF9800', '#F44336'],
-            textinfo='percent',  # Only % shown inside
+            textinfo='percent',
             textposition='inside',
             showlegend=True
         )])
-        fig_pie.update_layout(
-            title=f"Financial Health Distribution{title_suffix}",
-            legend=dict(
-                font=dict(size=16),
-                title="Financial Health Status",
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="center",
-                x=0.5
-            ),
-            height=520
+        fig.update_layout(
+            title="Financial Health of Indian Households (2022)",
+            legend=dict(font=dict(size=16), orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+            height=550
         )
+        st.plotly_chart(fig, use_container_width=True)
 
-    st.plotly_chart(fig_pie, use_container_width=True)
-
-    # === KEY METRICS + MAP ===
-    col1, col2 = st.columns([1, 1.3])
-
-    with col1:
-        st.subheader("Key Vulnerability Indicators")
-        st.metric("National Savings Rate", f"{temp_df['Savings_Rate'].mean():.1f}%")
-        st.metric("Avg. Debt Burden", f"{temp_df['Debt_Burden'].mean():.1f}%")
-        st.metric("Food Share of Budget", f"{temp_df['Food_Share'].mean():.1f}%")
-        distress_national = (temp_df['Financial_Health'] == 'In Distress').mean() * 100
-        st.metric("Households in Distress", f"{distress_national:.1f}%", delta="High Risk")
-
-        st.info("""
-        **Thesis Confirmed:**
-        • Income hides distress — **savings rate reveals truth**
-        • Rural India: Higher food share → lower resilience
-        • Joint families = **+22%** lower distress risk
-        """)
-
-    with col2:
-        st.subheader("Financial Distress Hotspots (National)")
-        distress_rate = (temp_df[temp_df['Financial_Health'] == 'In Distress']
-                         .groupby('STATE')['HH_WEIGHT_MS'].sum() / 
-                         temp_df.groupby('STATE')['HH_WEIGHT_MS'].sum() * 100).fillna(0).round(1)
+    # === STATE-LEVEL COMPARISON ===
+    elif view == "State-Level Comparison":
+        selected_state = st.selectbox("Select State for Detailed Analysis:", sorted(temp_df['STATE'].unique()))
+        state_data = temp_df[temp_df['STATE'] == selected_state]
         
-        state_map_df = pd.DataFrame({'STATE': distress_rate.index, 'Distress_Rate': distress_rate.values})
-        state_map_df['State'] = state_map_df['STATE'].replace(name_fix)
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            health_state = state_data['Financial_Health'].value_counts(normalize=True).mul(100).round(1)
+            fig = go.Figure(data=[go.Pie(
+                labels=health_state.index,
+                values=health_state.values,
+                hole=0.5,
+                marker_colors=['#00C853', '#64DD17', '#FF9800', '#F44336'],
+                textinfo='percent',
+                textposition='inside',
+                showlegend=True
+            )])
+            fig.update_layout(title=f"Financial Health — {selected_state}", height=480,
+                              legend=dict(font=dict(size=15)))
+            st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown(f"### {selected_state} — Key Metrics")
+            st.metric("Avg Monthly Income", f"₹{state_data['TOTAL_INCOME'].mean():,.0f}")
+            st.metric("Savings Rate", f"{state_data['Savings_Rate'].mean():.1f}%")
+            st.metric("Food Share", f"{state_data['Food_Share'].mean():.1f}%")
+            st.metric("In Financial Distress", f"{(state_data['Financial_Health']=='In Distress').mean()*100:.1f}%")
 
-        fig_map = px.choropleth(
-            state_map_df,
-            geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
-            featureidkey="properties.ST_NM",
-            locations='State',
-            color='Distress_Rate',
-            color_continuous_scale="Reds",
-            range_color=(0, 40),
-            title="Financial Distress by State (% of Households)",
-            hover_name='STATE',
-            labels={'Distress_Rate': 'Distress %'}
+    # === RURAL–URBAN WITHIN STATE (YOUR THESIS KILLER FEATURE) ===
+    else:  # Rural–Urban Within State
+        selected_state = st.selectbox("Select State to Compare Rural vs Urban:", sorted(temp_df['STATE'].unique()))
+        state_data = temp_df[temp_df[temp_df['STATE'] == selected_state]
+        
+        st.subheader(f"Rural vs Urban Financial Health — {selected_state}")
+        
+        fig = go.Figure()
+        colors = ['#00C853', '#64DD17', '#FF9800', '#F44336']
+        labels = ['Financially Secure', 'Stable', 'Vulnerable', 'In Distress']
+        
+        for i, region in enumerate(['RURAL', 'URBAN']):
+            subset = state_data[state_data['REGION_TYPE'] == region]
+            if len(subset) == 0:
+                continue
+            counts = subset['Financial_Health'].value_counts(normalize=True).reindex(labels, fill_value=0) * 100
+            fig.add_trace(go.Pie(
+                labels=labels,
+                values=counts.values,
+                name=region,
+                hole=0.45,
+                marker_colors=colors,
+                textinfo='percent',
+                textposition='inside',
+                domain={'x': [0, 0.48] if region == 'RURAL' else [0.52, 1]},
+                showlegend=True
+            ))
+        
+        fig.update_layout(
+            title=f"Rural vs Urban Financial Health — {selected_state}",
+            legend=dict(title="Health Status", font=dict(size=16)),
+            height=580,
+            annotations=[
+                dict(text="RURAL", x=0.18, y=0.5, font_size=20, showarrow=False),
+                dict(text="URBAN", x=0.82, y=0.5, font_size=20, showarrow=False)
+            ]
         )
-        fig_map.update_geos(fitbounds="locations", visible=False)
-        fig_map.update_layout(height=480, margin=dict(t=60))
-        st.plotly_chart(fig_map, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        # Auto-insight
+        rural_distress = (state_data[state_data['REGION_TYPE']=='RURAL']['Financial_Health']=='In Distress').mean()*100
+        urban_distress = (state_data[state_data['REGION_TYPE']=='URBAN']['Financial_Health']=='In Distress').mean()*100
+        st.markdown(f"**Insight:** In {selected_state}, **{rural_distress:.1f}%** of rural households vs **{urban_distress:.1f}%** of urban households are in financial distress.")
 
-    # === TOP 5 DISTRESS STATES ===
-    top5 = distress_rate.nlargest(5)
-    st.markdown(f"""
-    <div style="background:#FFEB3B20; padding:18px; border-radius:12px; border-left:8px solid #D32F2F;">
-        <h4>Highest Financial Distress States:</h4>
-        {', '.join([f"<b>{s}</b> ({v}%)" for s, v in top5.items()])}
-        <br><small>These states need immediate policy attention</small>
-    </div>
-    """, unsafe_allow_html=True)
+    # === NATIONAL DISTRESS MAP (always shown) ===
+    st.markdown("---")
+    st.subheader("National Financial Distress Map")
+    distress_rate = (temp_df[temp_df['Financial_Health'] == 'In Distress']
+                     .groupby('STATE')['HH_WEIGHT_MS'].sum() / 
+                     temp_df.groupby('STATE')['HH_WEIGHT_MS'].sum() * 100).fillna(0).round(1)
+    
+    map_df = pd.DataFrame({'STATE': distress_rate.index, 'Distress_%': distress_rate.values})
+    map_df['State_Clean'] = map_df['STATE'].replace(name_fix)
+    
+    fig_map = px.choropleth(map_df,
+                            geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+                            featureidkey="properties.ST_NM",
+                            locations='State_Clean',
+                            color='Distress_%',
+                            color_continuous_scale="Reds",
+                            range_color=(0, 45),
+                            title="Financial Distress Hotspots Across India",
+                            hover_name='STATE')
+    fig_map.update_geos(fitbounds="locations", visible=False)
+    st.plotly_chart(fig_map, use_container_width=True)
 
-    st.success("Financial Health Intelligence Engine Complete — Proves your core thesis: 'Income inequality ≠ Consumption inequality ≠ Financial well-being'")
+    st.success("Financial Intelligence Engine Complete — Proves: Income hides suffering. Savings, debt, and food share reveal the truth.")
 
 # INNOVATION 4: STATE COMPARISON ENGINE
 elif section == "🏙️ Regional Intelligence":
