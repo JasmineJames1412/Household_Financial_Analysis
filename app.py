@@ -199,12 +199,13 @@ if section == "🌐 Dashboard Overview":
     state_summary['state_clean'] = state_summary['STATE'].replace(name_fix)
     
     metric = st.radio("Color map by:", 
-                      ["Average Monthly Savings (₹)", "Savings Rate (%)", "Average Income (₹)"], 
+                      ["Average Monthly Savings (₹)", "Savings Rate (%)", "Average Income (₹)", "Average Monthly Expenditure (₹)"], 
                       horizontal=True, index=0)
     
     color_col = {'Average Monthly Savings (₹)': 'Savings',
                  'Savings Rate (%)': 'Savings_Rate', 
-                 'Average Income (₹)': 'TOTAL_INCOME'}[metric]
+                 'Average Income (₹)': 'TOTAL_INCOME',
+                 'Average Monthly Expenditure (₹)': 'TOTAL_EXPENDITURE'}[metric]
     
     fig = px.choropleth(state_summary,
                         geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
