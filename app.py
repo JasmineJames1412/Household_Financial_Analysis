@@ -658,8 +658,6 @@ elif section == "🏙️ Regional Intelligence":
 # Update existing sections to include "Intelligence" in titles and add insights
 elif section == "📈 Income Dynamics":
     st.markdown('<div class="section-header">📈 Income Source Intelligence</div>', unsafe_allow_html=True)
-elif section == "📈 Income Dynamics":
-    st.markdown('<div class="section-header">📈 Income Source Intelligence</div>', unsafe_allow_html=True)
     
     # === SAFE APPROACH: ONLY USE COLUMNS THAT ACTUALLY EXIST ===
     potential_income_cols = [
