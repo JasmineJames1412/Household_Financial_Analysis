@@ -199,12 +199,12 @@ if section == "🌐 Dashboard Overview":
     state_summary['state_clean'] = state_summary['STATE'].replace(name_fix)
     
     metric = st.radio("Color map by:", 
-                      ["Average Monthly Savings (₹)", "Savings Rate (%)", "Average Income (₹)", "Average Monthly Expenditure (₹)"], 
+                      ["Average Monthly Savings (₹)", "Savings Rate (%)", "Average Monthly Income (₹)", "Average Monthly Expenditure (₹)"], 
                       horizontal=True, index=0)
     
     color_col = {'Average Monthly Savings (₹)': 'Savings',
                  'Savings Rate (%)': 'Savings_Rate', 
-                 'Average Income (₹)': 'TOTAL_INCOME',
+                 'Average Monthly Income (₹)': 'TOTAL_INCOME',
                  'Average Monthly Expenditure (₹)': 'TOTAL_EXPENDITURE'}[metric]
     
     fig = px.choropleth(state_summary,
