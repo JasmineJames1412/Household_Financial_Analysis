@@ -336,7 +336,7 @@ elif section == "💰 Financial Analysis":
     # === STATE-LEVEL COMPARISON ===
     elif view == "State-Level Comparison":
         selected_state = st.selectbox("Select State for Detailed Analysis:", sorted(temp_df['STATE'].unique()))
-        state_data = temp_df[temp_df['STATE'] == selected_state]  # FIXED: Removed extra temp_df[]
+        state_data = temp_df[temp_df['STATE'] == selected_state]
         
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -363,8 +363,14 @@ elif section == "💰 Financial Analysis":
 
     # === RURAL–URBAN WITHIN STATE (YOUR THESIS KILLER FEATURE) ===
     else:  # Rural–Urban Within State
-        selected_state = st.selectbox("Select State to Compare Rural vs Urban:", sorted(temp_df['STATE'].unique()))
-        state_data = temp_df[temp_df['STATE'] == selected_state]  # FIXED: Removed extra temp_df[]
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            selected_state = st.selectbox("Select State to Compare Rural vs Urban:", sorted(temp_df['STATE'].unique()))
+        with col2:
+            # Add national comparison option
+            compare_level = st.radio("Compare:", ["State Level", "National Average"], horizontal=True)
+        
+        state_data = temp_df[temp_df['STATE'] == selected_state]
         
         st.subheader(f"Rural vs Urban Financial Health — {selected_state}")
         
@@ -376,7 +382,16 @@ elif section == "💰 Financial Analysis":
             subset = state_data[state_data['REGION_TYPE'] == region]
             if len(subset) == 0:
                 continue
-            counts = subset['Financial_Health'].value_counts(normalize=True).reindex(labels, fill_value=0) * 100
+            
+            if compare_level == "National Average":
+                # Compare against national averages for each region type
+                national_subset = temp_df[temp_df['REGION_TYPE'] == region]
+                counts = national_subset['Financial_Health'].value_counts(normalize=True).reindex(labels, fill_value=0) * 100
+                title_suffix = f" vs National {region} Avg"
+            else:
+                counts = subset['Financial_Health'].value_counts(normalize=True).reindex(labels, fill_value=0) * 100
+                title_suffix = f" — {region}"
+            
             fig.add_trace(go.Pie(
                 labels=labels,
                 values=counts.values,
@@ -389,13 +404,16 @@ elif section == "💰 Financial Analysis":
                 showlegend=True
             ))
         
+        # Perfectly centered annotations with adjusted positions
         fig.update_layout(
             title=f"Rural vs Urban Financial Health — {selected_state}",
             legend=dict(title="Health Status", font=dict(size=16)),
             height=580,
             annotations=[
-                dict(text="RURAL", x=0.18, y=0.5, font_size=20, showarrow=False),
-                dict(text="URBAN", x=0.82, y=0.5, font_size=20, showarrow=False)
+                dict(text="RURAL", x=0.22, y=0.5, font_size=20, showarrow=False, 
+                     font=dict(color="black", family="Arial", size=18)),
+                dict(text="URBAN", x=0.78, y=0.5, font_size=20, showarrow=False,
+                     font=dict(color="black", family="Arial", size=18))
             ]
         )
         st.plotly_chart(fig, use_container_width=True)
@@ -403,7 +421,15 @@ elif section == "💰 Financial Analysis":
         # Auto-insight
         rural_distress = (state_data[state_data['REGION_TYPE']=='RURAL']['Financial_Health']=='In Distress').mean()*100
         urban_distress = (state_data[state_data['REGION_TYPE']=='URBAN']['Financial_Health']=='In Distress').mean()*100
-        st.markdown(f"**Insight:** In {selected_state}, **{rural_distress:.1f}%** of rural households vs **{urban_distress:.1f}%** of urban households are in financial distress.")
+        
+        if compare_level == "National Average":
+            national_rural_distress = (temp_df[temp_df['REGION_TYPE']=='RURAL']['Financial_Health']=='In Distress').mean()*100
+            national_urban_distress = (temp_df[temp_df['REGION_TYPE']=='URBAN']['Financial_Health']=='In Distress').mean()*100
+            
+            st.markdown(f"**Insight:** In {selected_state}, **{rural_distress:.1f}%** of rural households vs **{urban_distress:.1f}%** of urban households are in financial distress.")
+            st.markdown(f"**National Context:** Across India, **{national_rural_distress:.1f}%** rural and **{national_urban_distress:.1f}%** urban households are in distress.")
+        else:
+            st.markdown(f"**Insight:** In {selected_state}, **{rural_distress:.1f}%** of rural households vs **{urban_distress:.1f}%** of urban households are in financial distress.")
 
     # === NATIONAL DISTRESS MAP (always shown) ===
     st.markdown("---")
@@ -413,7 +439,7 @@ elif section == "💰 Financial Analysis":
                      temp_df.groupby('STATE')['HH_WEIGHT_MS'].sum() * 100).fillna(0).round(1)
     
     map_df = pd.DataFrame({'STATE': distress_rate.index, 'Distress_%': distress_rate.values})
-    map_df['State_Clean'] = map_df['STATE'].replace(name_fix)
+    map_df['State'] = map_df['STATE'].replace(name_fix)
     
     fig_map = px.choropleth(map_df,
                             geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
