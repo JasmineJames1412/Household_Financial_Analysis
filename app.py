@@ -274,9 +274,9 @@ if section == "🌐 Dashboard Overview":
     st.plotly_chart(fig, use_container_width=True)
 
 # INNOVATION 3: ENHANCED FINANCIAL ANALYSIS WITH PREDICTIVE INSIGHTS
-elif section == "Financial Analysis":
-    st.markdown('<div class="section-header">Advanced Financial Intelligence Engine</div>', unsafe_allow_html=True)
-    
+elif section == "💰 Financial Analysis":  
+    st.markdown('<div class="section-header">💰 Advanced Financial Intelligence Engine</div>', unsafe_allow_html=True)
+   
     # === SAFE CALCULATIONS ===
     temp_df = df_clean.copy()
     temp_df['Savings'] = temp_df['TOTAL_INCOME'] - temp_df['TOTAL_EXPENDITURE']
