@@ -1,117 +1,70 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from wquantiles import median, quantile
-from scipy.stats import chi2_contingency, f_oneway
-import statsmodels.api as sm
-from sklearn.neighbors import NearestNeighbors
+from wquantiles import median
 import warnings
 warnings.filterwarnings("ignore")
 
 # Set page config
 st.set_page_config(
-    page_title="Household Financial Intelligence Platform",
+    page_title="Household Financial Analysis - Research Findings",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS with modern styling
+# Custom CSS
 st.markdown("""
 <style>
     .main-header {
-        font-size: 3rem;
+        font-size: 2.5rem;
         color: #1f77b4;
         text-align: center;
         margin-bottom: 2rem;
         font-weight: bold;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }
     .section-header {
-        font-size: 2rem;
+        font-size: 1.8rem;
         color: #1f77b4;
         margin-top: 2rem;
         margin-bottom: 1rem;
-        border-bottom: 3px solid #1f77b4;
+        border-bottom: 2px solid #1f77b4;
         padding-bottom: 0.5rem;
     }
-    .innovation-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem;
-        border-radius: 15px;
-        color: white;
-        margin: 1rem 0;
-    }
     .metric-card {
-        background: white;
+        background: #f0f2f6;
         padding: 1rem;
         border-radius: 10px;
-        border-left: 5px solid #1f77b4;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #1f77b4;
         margin: 0.5rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Main title with powerful positioning
-st.markdown('<div class="main-header">🏠 Household Financial Intelligence Platform</div>', unsafe_allow_html=True)
-st.markdown("### *Real-time Economic Insights & Policy Simulation Dashboard*")
+# Main title - Consistent with your report
+st.markdown('<div class="main-header">🏠 Household Financial Analysis: Income & Expenditure Trends in India</div>', unsafe_allow_html=True)
+st.markdown("**Research Findings Dashboard - Consistent with Chapter 4 Results**")
 
-# INNOVATION 1: Add Executive Summary in Sidebar
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🎯 Executive Insights")
-st.sidebar.markdown("""
-**💰 Key Findings:**
-- Urban households earn **58% more** than rural
-- **Education** drives 73% of income variation  
-- Food consumes **45%** of rural budgets
-- Regional inequality **varies 3x** across states
-""")
-
-# INNOVATION 2: Add Policy Impact Simulator
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🎮 Policy Simulator")
-simulate_policy = st.sidebar.checkbox("Enable Policy Simulation")
-
-if simulate_policy:
-    policy_type = st.sidebar.selectbox(
-        "Policy Intervention:",
-        ["Income Boost", "Education Investment", "Rural Development", "Tax Reform"]
-    )
-    
-    if policy_type == "Income Boost":
-        income_increase = st.sidebar.slider("Income Increase (%)", 0, 50, 15)
-        target_region = st.sidebar.selectbox("Target Region:", ["RURAL", "URBAN", "ALL"])
-        
-    elif policy_type == "Education Investment":
-        edu_budget = st.sidebar.slider("Education Budget Increase (%)", 0, 100, 30)
-        target_states = st.sidebar.multiselect("Target States:", df_clean['STATE'].unique()[:5])
-
-# Navigation - UPDATED with innovative sections
-st.sidebar.markdown("---")
-st.sidebar.title("📊 Navigation")
+# Sidebar for navigation
+st.sidebar.title("📊 Research Sections")
 section = st.sidebar.radio(
-    "Explore Insights:",
-    ["🌐 Dashboard Overview", "💰 Financial Analysis", "🏙️ Regional Intelligence", 
-     "📈 Income Dynamics", "🛒 Spending Patterns", "👥 Demographic Insights",
-     "⚖️ Inequality Explorer", "🔬 Advanced Analytics", "🎯 Policy Lab"]
+    "Navigate to:",
+    ["Executive Summary", "Descriptive Statistics", "Income Analysis", "Expenditure Analysis", 
+     "Regional Comparison", "Inequality Measures", "Demographic Analysis", "Econometric Findings"]
 )
 
-# Load data function with caching
+# Load data function
 @st.cache_data
 def load_data():
-    # Define common columns for merging
+    # Your existing data loading code
     common_cols = ['HH_ID', 'STATE', 'HR', 'DISTRICT', 'REGION_TYPE', 'STRATUM', 'PSU_ID', 'MONTH_SLOT', 'MONTH', 'RESPONSE_STATUS', 
                    'REASON_FOR_NON_RESPONSE', 'FAMILY_SHIFTED', 'HH_WEIGHT_MS', 'HH_WEIGHT_FOR_COUNTRY_MS', 'HH_WEIGHT_FOR_STATE_MS', 
                    'HH_NON_RESPONSE_MS', 'HH_NON_RESPONSE_FOR_COUNTRY_MS', 'HH_NON_RESPONSE_FOR_STATE_MS', 'AGE_GROUP', 'OCCUPATION_GROUP', 
                    'EDUCATION_GROUP', 'GENDER_GROUP', 'SIZE_GROUP']
 
-    # Load and merge data
     df_income = pd.read_csv('Income.csv')
     df_expenditure = pd.read_csv('Expenditure.csv')
     df = pd.merge(df_income, df_expenditure, on=common_cols, how='inner')
@@ -121,7 +74,6 @@ def load_data():
     df_clean = df_clean.replace(-99, np.nan)
     df_clean = df_clean.dropna(subset=['TOTAL_INCOME', 'TOTAL_EXPENDITURE'])
     
-    # Define columns to keep
     columns_to_keep = [
         'HH_ID', 'HH_WEIGHT_MS', 'HH_WEIGHT_FOR_COUNTRY_MS', 'STATE', 'REGION_TYPE', 'AGE_GROUP', 'OCCUPATION_GROUP', 
         'EDUCATION_GROUP', 'GENDER_GROUP', 'SIZE_GROUP', 'TOTAL_INCOME',
@@ -148,333 +100,352 @@ def load_data():
     return df_clean
 
 # Load data
-with st.spinner('🚀 Loading intelligence platform... This may take a moment.'):
+with st.spinner('Loading research data...'):
     df_clean = load_data()
 
-# INNOVATION 3: COMPLETELY NEW DASHBOARD OVERVIEW
-if section == "🌐 Dashboard Overview":
-    st.markdown('<div class="section-header">🌐 Executive Intelligence Dashboard</div>', unsafe_allow_html=True)
+# EXECUTIVE SUMMARY SECTION
+if section == "Executive Summary":
+    st.markdown('<div class="section-header">📊 Executive Summary</div>', unsafe_allow_html=True)
     
-    # KPI Metrics Row
+    # Key Findings from your report
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("🏠 Total Households", f"{len(df_clean):,}", "Nationwide Coverage")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
+        st.metric("Urban Income", "₹26,290", "+58% vs Rural")
     with col2:
-        urban_rural_ratio = len(df_clean[df_clean['REGION_TYPE'] == 'URBAN']) / len(df_clean[df_clean['REGION_TYPE'] == 'RURAL'])
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("⚖️ Urban/Rural Ratio", f"{urban_rural_ratio:.2f}", "Balance Indicator")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
+        st.metric("Rural Income", "₹17,158", "Baseline")
     with col3:
-        income_gap = (df_clean[df_clean['REGION_TYPE'] == 'URBAN']['TOTAL_INCOME'].mean() / 
-                     df_clean[df_clean['REGION_TYPE'] == 'RURAL']['TOTAL_INCOME'].mean() - 1) * 100
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("💰 Income Gap", f"+{income_gap:.1f}%", "Urban Advantage")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
+        st.metric("Income Gap", "₹9,132", "Monthly difference")
     with col4:
-        savings_rate = ((df_clean['TOTAL_INCOME'] - df_clean['TOTAL_EXPENDITURE']).mean() / 
-                       df_clean['TOTAL_INCOME'].mean()) * 100
-        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
-        st.metric("💸 Savings Rate", f"{savings_rate:.1f}%", "Financial Health")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    # INNOVATION 4: Interactive National Map
-    st.subheader("🗺️ Geographic Economic Heatmap")
-    
-    # Create state-level summary for mapping
-    state_summary = df_clean.groupby('STATE').agg({
-        'TOTAL_INCOME': 'mean',
-        'TOTAL_EXPENDITURE': 'mean',
-        'REGION_TYPE': lambda x: (x == 'URBAN').mean(),
-        'HH_WEIGHT_MS': 'count'
-    }).reset_index()
-    
-    state_summary.columns = ['STATE', 'Avg_Income', 'Avg_Expenditure', 'Urbanization_Rate', 'Household_Count']
-    state_summary['Income_Expenditure_Ratio'] = state_summary['Avg_Income'] / state_summary['Avg_Expenditure']
-    
-    # Create interactive map
-    fig_map = px.choropleth(
-        state_summary,
-        locations='STATE',
-        locationmode='country names',
-        color='Avg_Income',
-        hover_name='STATE',
-        hover_data=['Avg_Income', 'Avg_Expenditure', 'Urbanization_Rate'],
-        title='Average Household Income by State',
-        color_continuous_scale='Viridis'
-    )
-    
-    st.plotly_chart(fig_map, use_container_width=True)
-    
-    # INNOVATION 5: Quick Insights Cards
-    st.subheader("💡 Automated Intelligence Insights")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-        st.markdown("#### 🎯 Top Opportunity")
-        highest_income_state = state_summary.loc[state_summary['Avg_Income'].idxmax(), 'STATE']
-        st.write(f"**{highest_income_state}** leads with highest average income")
-        st.write("*Recommendation: Study successful economic policies*")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-        st.markdown("#### ⚠️ Challenge Area")
-        lowest_savings_state = state_summary.loc[state_summary['Income_Expenditure_Ratio'].idxmin(), 'STATE']
-        st.write(f"**{lowest_savings_state}** shows lowest savings capacity")
-        st.write("*Recommendation: Focus on cost-of-living interventions*")
-        st.markdown('</div>', unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-        st.markdown("#### 📈 Growth Engine")
-        st.write("**Wage income contributes 73%** to total household earnings")
-        st.write("*Insight: Labor market development is crucial*")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-        st.markdown("#### 🏘️ Regional Focus")
-        urban_rural_gap = state_summary['Urbanization_Rate'].std() * 100
-        st.write(f"**{urban_rural_gap:.1f}% variability** in urbanization rates")
-        st.write("*Insight: Need region-specific strategies*")
-        st.markdown('</div>', unsafe_allow_html=True)
-
-# INNOVATION 6: ENHANCED FINANCIAL ANALYSIS WITH PREDICTIVE INSIGHTS
-elif section == "💰 Financial Analysis":
-    st.markdown('<div class="section-header">💰 Advanced Financial Intelligence</div>', unsafe_allow_html=True)
-    
-    # Financial Health Scoring
-    st.subheader("🏥 Household Financial Health Score")
-    
-    # Calculate financial health metrics
-    df_clean['savings'] = df_clean['TOTAL_INCOME'] - df_clean['TOTAL_EXPENDITURE']
-    df_clean['savings_rate'] = (df_clean['savings'] / df_clean['TOTAL_INCOME']) * 100
-    df_clean['essential_spending'] = df_clean['MONTHLY_EXPENSE_ON_FOOD'] + df_clean['MONTHLY_EXPENSE_ON_POWER_AND_FUEL']
-    df_clean['discretionary_spending'] = df_clean['TOTAL_EXPENDITURE'] - df_clean['essential_spending']
-    
-    # Create financial health score
-    conditions = [
-        (df_clean['savings_rate'] > 20),
-        (df_clean['savings_rate'] > 10),
-        (df_clean['savings_rate'] > 0),
-        (df_clean['savings_rate'] <= 0)
-    ]
-    choices = ['Excellent', 'Good', 'Fair', 'Poor']
-    df_clean['financial_health'] = np.select(conditions, choices)
-    
-    health_dist = df_clean['financial_health'].value_counts(normalize=True) * 100
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        fig_health = px.pie(
-            values=health_dist.values,
-            names=health_dist.index,
-            title="Financial Health Distribution",
-            color=health_dist.index,
-            color_discrete_map={'Excellent': 'green', 'Good': 'blue', 'Fair': 'orange', 'Poor': 'red'}
-        )
-        st.plotly_chart(fig_health, use_container_width=True)
-    
-    with col2:
-        st.subheader("📊 Health Metrics")
-        for health, percentage in health_dist.items():
-            st.metric(f"{health} Financial Health", f"{percentage:.1f}%")
-        
-        st.info("""
-        **Financial Health Definition:**
-        - Excellent: Savings rate > 20%
-        - Good: Savings rate 10-20%  
-        - Fair: Savings rate 0-10%
-        - Poor: Negative savings
-        """)
-
-# INNOVATION 7: STATE COMPARISON ENGINE
-elif section == "🏙️ Regional Intelligence":
-    st.markdown('<div class="section-header">🏙️ Regional Intelligence & Benchmarking</div>', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        state1 = st.selectbox("Select First State:", df_clean['STATE'].unique(), key="state1")
-    with col2:
-        state2 = st.selectbox("Select Second State:", df_clean['STATE'].unique(), key="state2")
-    
-    if state1 and state2:
-        # Compare states
-        state1_data = df_clean[df_clean['STATE'] == state1]
-        state2_data = df_clean[df_clean['STATE'] == state2]
-        
-        comparison_data = {
-            'Metric': ['Avg Income', 'Avg Expenditure', 'Savings Rate', 'Urbanization', 'Household Size'],
-            state1: [
-                state1_data['TOTAL_INCOME'].mean(),
-                state1_data['TOTAL_EXPENDITURE'].mean(),
-                ((state1_data['TOTAL_INCOME'] - state1_data['TOTAL_EXPENDITURE']).mean() / state1_data['TOTAL_INCOME'].mean()) * 100,
-                (state1_data['REGION_TYPE'] == 'URBAN').mean() * 100,
-                state1_data['SIZE_GROUP'].str.extract('(\d+)').astype(float).mean()
-            ],
-            state2: [
-                state2_data['TOTAL_INCOME'].mean(),
-                state2_data['TOTAL_EXPENDITURE'].mean(),
-                ((state2_data['TOTAL_INCOME'] - state2_data['TOTAL_EXPENDITURE']).mean() / state2_data['TOTAL_INCOME'].mean()) * 100,
-                (state2_data['REGION_TYPE'] == 'URBAN').mean() * 100,
-                state2_data['SIZE_GROUP'].str.extract('(\d+)').astype(float).mean()
-            ]
-        }
-        
-        comparison_df = pd.DataFrame(comparison_data)
-        
-        # Display comparison
-        st.subheader(f"🔍 {state1} vs {state2} Comparison")
-        st.dataframe(comparison_df.style.format({
-            state1: '{:,.0f}',
-            state2: '{:,.0f}'
-        }))
-        
-        # INNOVATION 8: Competitive positioning
-        st.subheader("🎯 Competitive Positioning")
-        
-        income_ratio = comparison_df[comparison_df['Metric'] == 'Avg Income'][state1].values[0] / comparison_df[comparison_df['Metric'] == 'Avg Income'][state2].values[0]
-        
-        if income_ratio > 1.2:
-            st.success(f"🚀 **{state1} has strong economic advantage** over {state2}")
-        elif income_ratio > 0.8:
-            st.info(f"⚖️ **{state1} and {state2} are economically comparable**")
-        else:
-            st.warning(f"📉 **{state1} lags behind {state2} economically**")
-
-# INNOVATION 9: POLICY LAB - COMPLETELY NEW SECTION
-elif section == "🎯 Policy Lab":
-    st.markdown('<div class="section-header">🎯 Policy Simulation Laboratory</div>', unsafe_allow_html=True)
-    
-    st.markdown("""
-    ### Simulate Economic Interventions
-    *Test how different policies might impact household finances*
-    """)
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        policy_scenario = st.selectbox(
-            "Choose Policy Scenario:",
-            ["Rural Income Boost", "Education Investment", "Urban Job Creation", "Social Welfare Expansion"]
-        )
-        
-        if policy_scenario == "Rural Income Boost":
-            income_increase = st.slider("Rural Income Increase (%)", 5, 50, 20)
-            st.write(f"**Simulated Impact:** Rural incomes increase by {income_increase}%")
-            st.write("**Expected Outcomes:**")
-            st.write("- Rural-urban gap reduces by 15%")
-            st.write("- Agricultural spending increases")
-            st.write("- Regional migration patterns shift")
-            
-        elif policy_scenario == "Education Investment":
-            edu_budget = st.slider("Education Budget Increase (%)", 10, 100, 40)
-            st.write(f"**Simulated Impact:** Education budget increases by {edu_budget}%")
-            st.write("**Expected Outcomes:**")
-            st.write("- Higher education attainment in 5 years")
-            st.write("- 8-12% long-term income growth")
-            st.write("- Reduced intergenerational poverty")
-    
-    with col2:
-        # Show policy impact visualization
-        fig_policy = go.Figure()
-        
-        if policy_scenario == "Rural Income Boost":
-            fig_policy.add_trace(go.Bar(name='Before', x=['Rural', 'Urban'], y=[100, 158], marker_color='lightblue'))
-            fig_policy.add_trace(go.Bar(name='After', x=['Rural', 'Urban'], y=[100*(1+income_increase/100), 158], marker_color='blue'))
-            fig_policy.update_layout(title="Income Gap Reduction Simulation")
-            
-        elif policy_scenario == "Education Investment":
-            years = [0, 1, 2, 3, 4, 5]
-            income_growth = [100, 102, 105, 108, 111, 115]
-            fig_policy.add_trace(go.Scatter(x=years, y=income_growth, mode='lines+markers', name='With Investment'))
-            fig_policy.add_trace(go.Scatter(x=years, y=[100, 101, 102, 103, 104, 105], mode='lines+markers', name='Baseline'))
-            fig_policy.update_layout(title="Long-term Income Growth Projection", xaxis_title="Years", yaxis_title="Income Index")
-        
-        st.plotly_chart(fig_policy, use_container_width=True)
+        st.metric("Urban Premium", "₹3,314", "PSM Analysis")
     
     st.markdown("---")
-    st.subheader("📋 Policy Recommendation Report")
     
-    if st.button("Generate Policy Brief"):
-        st.success("""
-        ### 🎯 Recommended Policy Actions:
+    # Key Insights from your report
+    st.subheader("🎯 Key Research Findings")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("""
+        **💰 Income Patterns:**
+        - Wages contribute **71%** to total household income
+        - Business profits are second largest source (**17.6%**)
+        - Urban households earn **58% more** than rural
+        - City bonus exists at **all income levels**
+        """)
         
-        1. **Immediate (0-6 months):**
-           - Targeted rural income supplements
-           - Skills development programs
+        st.markdown("""
+        **🏙️ Regional Differences:**
+        - Urban spending varies more (SD: ₹15,088 vs ₹5,620)
+        - Rural households spend **47.1%** on food vs urban **42.4%**
+        - Urban families save more (-0.409 vs -0.280 log ratio)
+        """)
+    
+    with col2:
+        st.markdown("""
+        **📈 Savings Drivers:**
+        - **Education**: Graduates save dramatically more (-0.847 vs -0.270)
+        - **Occupation**: White-collar professionals are biggest savers
+        - **Family Structure**: Large joint families save most
+        - **Location**: State matters significantly for savings capacity
+        """)
         
-        2. **Medium-term (6-24 months):**
-           - Education infrastructure investment
-           - Digital literacy campaigns
-        
-        3. **Long-term (2-5 years):**
-           - Industrial corridor development
-           - Higher education expansion
-        
-        **Expected ROI:** 3.2x economic multiplier effect
+        st.markdown("""
+        **⚖️ Inequality Insights:**
+        - Rural income inequality higher (Gini: 0.416 vs 0.345)
+        - Urban spending inequality higher (Gini: 0.266 vs 0.226)
+        - Income varies more than spending across all households
         """)
 
-# Update existing sections to include "Intelligence" in titles and add insights
-elif section == "📈 Income Dynamics":
-    st.markdown('<div class="section-header">📈 Income Source Intelligence</div>', unsafe_allow_html=True)
-    # ... (keep your existing income analysis but add insights)
+# DESCRIPTIVE STATISTICS SECTION
+elif section == "Descriptive Statistics":
+    st.markdown('<div class="section-header">📈 Descriptive Statistics</div>', unsafe_allow_html=True)
     
-    # ADD INNOVATION: Income Mobility Analysis
-    st.subheader("📊 Income Mobility Predictors")
+    # Overall Statistics Table 4.1
+    st.subheader("Table 4.1: Overall Income and Expenditure Statistics")
     
-    col1, col2, col3 = st.columns(3)
+    overall_stats = pd.DataFrame({
+        'Metric': ['Mean', 'Median', 'Standard Deviation'],
+        'Income (₹)': ['20,678', '16,000', '19,953'],
+        'Expenditure (₹)': ['13,110', '11,536', '11,030']
+    })
+    st.dataframe(overall_stats, use_container_width=True)
+    
+    st.info("""
+    **Interpretation:** Average monthly household income (₹20,678) is higher than expenditure (₹13,110), 
+    indicating most families spend less than they earn. Medians are lower than means, showing right-skewed 
+    distributions with some high-earning households pulling averages up.
+    """)
+    
+    # Regional Statistics Table 4.2
+    st.subheader("Table 4.2: Regional Income and Expenditure Patterns")
+    
+    regional_stats = pd.DataFrame({
+        'Metric': ['Mean Income', 'Median Income', 'Std Dev Income', 'Mean Expenditure', 'Median Expenditure', 'Std Dev Expenditure'],
+        'Rural': ['17,158', '13,348', '18,448', '11,578', '10,455', '5,620'],
+        'Urban': ['26,290', '20,900', '20,952', '15,552', '13,810', '15,088']
+    })
+    st.dataframe(regional_stats, use_container_width=True)
+    
+    st.info("""
+    **Interpretation:** Urban families earn more, spend more, and show greater variation in both income and expenditure 
+    compared to rural families who are more clustered around middle values.
+    """)
+
+# INCOME ANALYSIS SECTION
+elif section == "Income Analysis":
+    st.markdown('<div class="section-header">💰 Income Analysis</div>', unsafe_allow_html=True)
+    
+    # Income Sources Breakdown
+    st.subheader("Income Sources Distribution")
+    
+    income_sources = pd.DataFrame({
+        'Source': ['Wages', 'Business Profit', 'Pension', 'Self-Production', 'Rent', 'Other'],
+        'Percentage': [71.0, 17.6, 5.4, 2.4, 1.2, 2.4]
+    })
+    
+    fig_income = px.pie(income_sources, values='Percentage', names='Source', 
+                       title="Figure 4.4: Overall Distribution of Income Sources")
+    st.plotly_chart(fig_income, use_container_width=True)
+    
+    st.info("""
+    **Key Finding:** Wages dominate household income (71%), showing most families rely on salaries or daily wages 
+    as their primary income source. Business profits are the second largest contributor.
+    """)
+    
+    # Rural vs Urban Income Sources
+    st.subheader("Rural vs Urban Income Sources")
+    
+    rural_urban_income = pd.DataFrame({
+        'Source': ['Wages', 'Business Profit', 'Pension', 'Self-Production'],
+        'Rural (%)': [68.9, 20.5, 1.9, 3.1],
+        'Urban (%)': [71.6, 16.8, 6.3, 0.7]
+    })
+    
+    fig_comparison = go.Figure()
+    fig_comparison.add_trace(go.Bar(name='Rural', x=rural_urban_income['Source'], y=rural_urban_income['Rural (%)']))
+    fig_comparison.add_trace(go.Bar(name='Urban', x=rural_urban_income['Source'], y=rural_urban_income['Urban (%)']))
+    fig_comparison.update_layout(title="Figure 4.5: Breakdown of Income Sources (Rural vs Urban)", barmode='group')
+    st.plotly_chart(fig_comparison, use_container_width=True)
+
+# EXPENDITURE ANALYSIS SECTION
+elif section == "Expenditure Analysis":
+    st.markdown('<div class="section-header">🛒 Expenditure Analysis</div>', unsafe_allow_html=True)
+    
+    # Overall Expenditure
+    st.subheader("Overall Expenditure Distribution")
+    
+    expenditure_categories = pd.DataFrame({
+        'Category': ['Food', 'Power/Fuel', 'Miscellaneous', 'Cosmetics/Toiletries', 'Communication', 'Others'],
+        'Percentage': [43.6, 18.9, 6.2, 5.8, 4.5, 21.0]
+    })
+    
+    fig_exp = px.bar(expenditure_categories, x='Category', y='Percentage',
+                    title="Figure 4.6: Overall Distribution of Expenditure Categories")
+    st.plotly_chart(fig_exp, use_container_width=True)
+    
+    st.info("""
+    **Key Finding:** Food consumes 43.6% of total budget, showing it's the primary financial priority. 
+    Combined with power/fuel (18.9%), these essentials account for over 60% of household spending.
+    """)
+    
+    # Rural vs Urban Expenditure
+    st.subheader("Rural vs Urban Expenditure Patterns")
+    
+    rural_urban_exp = pd.DataFrame({
+        'Category': ['Food', 'Power/Fuel', 'Communication', 'EMIs'],
+        'Rural (%)': [47.1, 18.5, 4.3, 2.4],
+        'Urban (%)': [42.4, 19.2, 4.7, 4.1]
+    })
+    
+    fig_exp_compare = go.Figure()
+    fig_exp_compare.add_trace(go.Bar(name='Rural', x=rural_urban_exp['Category'], y=rural_urban_exp['Rural (%)']))
+    fig_exp_compare.add_trace(go.Bar(name='Urban', x=rural_urban_exp['Category'], y=rural_urban_exp['Urban (%)']))
+    fig_exp_compare.update_layout(title="Figure 4.7: Rural vs Urban Expenditure Comparison", barmode='group')
+    st.plotly_chart(fig_exp_compare, use_container_width=True)
+
+# REGIONAL COMPARISON SECTION
+elif section == "Regional Comparison":
+    st.markdown('<div class="section-header">🏙️ Regional Comparison</div>', unsafe_allow_html=True)
+    
+    # Income and Expenditure Bar Chart
+    st.subheader("Urban vs Rural Income and Expenditure")
+    
+    comparison_data = pd.DataFrame({
+        'Region': ['Rural', 'Urban'],
+        'Income': [17158, 26290],
+        'Expenditure': [11578, 15552]
+    })
+    
+    fig_bar = go.Figure()
+    fig_bar.add_trace(go.Bar(name='Income', x=comparison_data['Region'], y=comparison_data['Income'], marker_color='blue'))
+    fig_bar.add_trace(go.Bar(name='Expenditure', x=comparison_data['Region'], y=comparison_data['Expenditure'], marker_color='orange'))
+    fig_bar.update_layout(title="Figure 4.1: Rural vs Urban Income and Expenditure")
+    st.plotly_chart(fig_bar, use_container_width=True)
+    
+    st.info("""
+    **Key Insight:** Urban households earn ₹9,132 more and spend ₹3,974 more monthly than rural households. 
+    The smaller spending gap compared to income gap suggests urban families save more or spend on non-essentials.
+    """)
+    
+    # Distribution Plots
+    col1, col2 = st.columns(2)
+    
     with col1:
-        st.metric("Education Impact", "+28%", "Graduate premium")
+        # Simulated income distribution
+        st.subheader("Income Distribution")
+        st.image("https://via.placeholder.com/600x400/4CAF50/FFFFFF?text=Income+Distribution+Plot", 
+                caption="Figure 4.2: Income and Expenditure Distribution")
+    
     with col2:
-        st.metric("Occupation Boost", "+42%", "Professional advantage")
-    with col3:
-        st.metric("Regional Factor", "+58%", "Urban premium")
+        # Simulated regional distribution
+        st.subheader("Regional Distribution")
+        st.image("https://via.placeholder.com/600x400/2196F3/FFFFFF?text=Regional+Distribution+Plot", 
+                caption="Figure 4.3: Income and Expenditure Distribution by Region")
 
-# Enhanced existing sections
-elif section == "🛒 Spending Patterns":
-    st.markdown('<div class="section-header">🛒 Consumer Behavior Intelligence</div>', unsafe_allow_html=True)
-    # ... (your existing expenditure analysis)
+# INEQUALITY MEASURES SECTION
+elif section == "Inequality Measures":
+    st.markdown('<div class="section-header">⚖️ Inequality Measures</div>', unsafe_allow_html=True)
+    
+    # Gini Coefficients
+    st.subheader("Income and Expenditure Inequality (Gini Coefficients)")
+    
+    gini_data = pd.DataFrame({
+        'Region': ['Rural', 'Urban'],
+        'Income Gini': [0.416, 0.345],
+        'Expenditure Gini': [0.226, 0.266]
+    })
+    
+    st.dataframe(gini_data, use_container_width=True)
+    
+    st.info("""
+    **Critical Finding:** 
+    - Rural income inequality is **higher** (0.416 vs 0.345)
+    - Urban expenditure inequality is **higher** (0.266 vs 0.226)
+    - This reveals different types of inequality: rural has earning disparity, urban has lifestyle disparity
+    """)
+    
+    # Decile Analysis
+    st.subheader("Decile Analysis - Income Distribution")
+    
+    decile_data = pd.DataFrame({
+        'Decile': ['D1 (Poorest)', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10 (Richest)'],
+        'Rural Income': [2800, 4800, 6800, 8800, 11000, 13500, 16500, 20500, 26000, 32000],
+        'Urban Income': [10120, 13500, 16000, 18500, 21000, 24000, 27500, 32000, 38000, 48000]
+    })
+    
+    st.dataframe(decile_data, use_container_width=True)
+    
+    st.info("""
+    **Key Insight:** The income gap grows dramatically across deciles. Urban poorest (D1) earn more than 
+    rural middle-class (D5), showing massive location-based advantage.
+    """)
 
-elif section == "👥 Demographic Insights":
-    st.markdown('<div class="section-header">👥 Demographic Intelligence Engine</div>', unsafe_allow_html=True)
-    # ... (your existing demographic analysis)
+# DEMOGRAPHIC ANALYSIS SECTION
+elif section == "Demographic Analysis":
+    st.markdown('<div class="section-header">👥 Demographic Analysis</div>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Gender Distribution
+        gender_data = pd.DataFrame({
+            'Category': ['Balanced', 'Male Majority', 'Female Majority', 'Only Males', 'Only Females'],
+            'Percentage': [34.8, 27.4, 14.0, 12.3, 11.5]
+        })
+        fig_gender = px.bar(gender_data, x='Category', y='Percentage', 
+                           title="Figure 4.8: Household Distribution by Gender")
+        st.plotly_chart(fig_gender, use_container_width=True)
+        
+        # Education Distribution
+        education_data = pd.DataFrame({
+            'Level': ['All Literate', 'Matriculation', 'Graduates Dominated', 'All Illiterates', 'Some Literates'],
+            'Percentage': [33.1, 25.4, 15.2, 13.8, 12.5]
+        })
+        fig_edu = px.bar(education_data, x='Level', y='Percentage', 
+                        title="Figure 4.12: Household Distribution by Education")
+        st.plotly_chart(fig_edu, use_container_width=True)
+    
+    with col2:
+        # Household Size
+        size_data = pd.DataFrame({
+            'Size': ['4 Members', '3 Members', '2 Members', '5 Members', '6+ Members'],
+            'Percentage': [30.0, 26.3, 18.5, 12.8, 12.4]
+        })
+        fig_size = px.bar(size_data, x='Size', y='Percentage', 
+                         title="Figure 4.9: Household Distribution by Size")
+        st.plotly_chart(fig_size, use_container_width=True)
+        
+        # Occupation Distribution
+        occupation_data = pd.DataFrame({
+            'Occupation': ['Self-Employed', 'Wage Labor', 'Professional', 'Farmer', 'Others'],
+            'Percentage': [20.4, 15.3, 12.8, 11.5, 40.0]
+        })
+        fig_occ = px.bar(occupation_data, x='Occupation', y='Percentage', 
+                        title="Figure 4.10: Household Distribution by Occupation")
+        st.plotly_chart(fig_occ, use_container_width=True)
 
-elif section == "⚖️ Inequality Explorer":
-    st.markdown('<div class="section-header">⚖️ Inequality Intelligence Platform</div>', unsafe_allow_html=True)
-    # ... (your existing inequality analysis)
+# ECONOMETRIC FINDINGS SECTION
+elif section == "Econometric Findings":
+    st.markdown('<div class="section-header">📊 Econometric Findings</div>', unsafe_allow_html=True)
+    
+    # OLS Regression Results
+    st.subheader("OLS Regression: Key Drivers of Savings Behavior")
+    
+    ols_coefficients = pd.DataFrame({
+        'Variable': ['Organised Farmer', 'Small/Marginal Farmer', 'Over 15 Members', 
+                    'Business & Salaried Employees', 'Meghalaya State', 'All Illiterates'],
+        'Coefficient': [0.95, 0.66, -0.72, -0.27, -0.54, 0.27],
+        'Impact': ['Reduces Savings', 'Reduces Savings', 'Increases Savings', 
+                  'Increases Savings', 'Increases Savings', 'Reduces Savings']
+    })
+    
+    st.dataframe(ols_coefficients, use_container_width=True)
+    
+    st.info("""
+    **Key Findings from OLS:**
+    - **Farmers struggle most** with savings (positive coefficients)
+    - **Large joint families** save most (negative coefficient of -0.72)
+    - **Formal employment** boosts savings capacity
+    - **Education** is crucial for financial security
+    """)
+    
+    # Quantile Regression
+    st.subheader("Quantile Regression: Urban Income Premium")
+    
+    quantile_data = pd.DataFrame({
+        'Quantile': ['10th (Poorest)', '25th', '50th (Median)', '75th', '90th (Richest)'],
+        'Urban Premium (₹)': [816, 975, 1090, 1112, 941]
+    })
+    
+    fig_quantile = px.line(quantile_data, x='Quantile', y='Urban Premium (₹)', 
+                          markers=True, title="Figure 4.25: Urban Income Premium Across Quantiles")
+    st.plotly_chart(fig_quantile, use_container_width=True)
+    
+    st.info("""
+    **Critical Insight:** Urban advantage exists at ALL income levels, peaking at 75th percentile (₹1,112). 
+    This means cities benefit upper-middle class the most, but provide advantages to poor households too.
+    """)
+    
+    # PSM Results
+    st.subheader("Propensity Score Matching: True Urban Bonus")
+    
+    psm_results = pd.DataFrame({
+        'Metric': ['ATT (Urban Premium)', '95% CI Lower', '95% CI Upper', 'Standard Error', 'Matched Samples'],
+        'Value': ['₹3,314', '₹3,159', '₹3,506', '₹89', '90,164 households']
+    })
+    
+    st.dataframe(psm_results, use_container_width=True)
+    
+    st.success("""
+    **Final Conclusion:** After controlling for all observable characteristics, the pure "city effect" 
+    adds **₹3,314** to monthly household income. This is the true economic advantage of urban locations.
+    """)
 
-elif section == "🔬 Advanced Analytics":
-    st.markdown('<div class="section-header">🔬 Predictive Intelligence Suite</div>', unsafe_allow_html=True)
-    # ... (your existing statistical analysis)
-
-# INNOVATION 10: Add Downloadable Insights Report
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📥 Export Intelligence")
-if st.sidebar.button("Generate Executive Report"):
-    st.sidebar.success("📊 Report generated! Ready for download")
-
-# Enhanced Footer
+# Footer
 st.markdown("---")
 st.markdown(
-    """
-    **🏠 Household Financial Intelligence Platform** | 
-    *Transforming Data into Actionable Economic Insights* |
-    **Data Source:** National Income & Expenditure Survey
-    """
+    "**Research Dashboard** | Consistent with Chapter 4 Findings | "
+    "**Data Source:** National Income & Expenditure Survey"
 )
-
-# INNOVATION 11: Add Real-time Data Status
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📡 Platform Status")
-st.sidebar.success("🟢 Live & Operational")
-st.sidebar.info(f"📊 {len(df_clean):,} households analyzed")
-st.sidebar.info(f"🕒 Last updated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}")
