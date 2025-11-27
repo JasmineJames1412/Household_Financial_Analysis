@@ -62,22 +62,6 @@ st.markdown("""
 st.markdown('<div class="main-header">🏠 Household Financial Intelligence Platform</div>', unsafe_allow_html=True)
 st.markdown("### *Real-time Economic Insights & Policy Simulation Dashboard*")
 
-# INNOVATION 1: Add Executive Summary in Sidebar
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🎯 Executive Insights")
-st.sidebar.markdown("""
-**💰 Key Findings:**
-- Urban households earn **58% more** than rural
-- **Education** drives 73% of income variation  
-- Food consumes **45%** of rural budgets
-- Regional inequality **varies 3x** across states
-""")
-
-# INNOVATION 2: Add Policy Impact Simulator
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🎮 Policy Simulator")
-simulate_policy = st.sidebar.checkbox("Enable Policy Simulation")
-
 # Navigation - UPDATED with innovative sections
 st.sidebar.markdown("---")
 st.sidebar.title("📊 Navigation")
@@ -137,7 +121,7 @@ def load_data():
 with st.spinner('🚀 Loading intelligence platform... This may take a moment.'):
     df_clean = load_data()
 
-# INNOVATION 3: COMPLETELY NEW DASHBOARD OVERVIEW
+# INNOVATION 1: COMPLETELY NEW DASHBOARD OVERVIEW
 if section == "🌐 Dashboard Overview":
     st.markdown('<div class="section-header">🌐 Executive Intelligence Dashboard</div>', unsafe_allow_html=True)
     
@@ -169,7 +153,7 @@ if section == "🌐 Dashboard Overview":
         st.metric("💸 Savings Rate", f"{savings_rate:.1f}%", "Financial Health")
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # INNOVATION 4: WORKING INDIA MAP
+    # INNOVATION 2: WORKING INDIA MAP
     st.subheader("Geographic Financial Stress Map")
     
     state_summary = df_clean.groupby('STATE').agg({
@@ -198,6 +182,13 @@ if section == "🌐 Dashboard Overview":
     state_summary = state_summary.reset_index()
     state_summary['State'] = state_summary['STATE'].replace(name_fix)
     
+    # Dynamic top and bottom selection
+    col1, col2 = st.columns(2)
+    with col1:
+        n_top = st.slider("Number of Top States to Show", 1, 10, 3, key="top_slider")
+    with col2:
+        n_bottom = st.slider("Number of Bottom States to Show", 1, 10, 3, key="bottom_slider")
+    
     metric = st.radio("Color map by:", 
                       ["Average Monthly Savings (₹)", "Savings Rate (%)", "Average Monthly Income (₹)", "Average Monthly Expenditure (₹)"], 
                       horizontal=True, index=0)
@@ -209,24 +200,43 @@ if section == "🌐 Dashboard Overview":
     
     # === DYNAMIC INTELLIGENCE CAPTION ===
     if metric == "Savings Rate (%)":
-        top_states = state_summary.nlargest(n_top_bottom, 'Savings_Rate')[['STATE', 'Savings_Rate']]
-        bottom_states = state_summary.nsmallest(n_top_bottom, 'Savings_Rate')[['STATE', 'Savings_Rate']]
-        unit = "%"
+        top_states = state_summary.nlargest(n_top, 'Savings_Rate')[['STATE', 'Savings_Rate']]
+        bottom_states = state_summary.nsmallest(n_bottom, 'Savings_Rate')[['STATE', 'Savings_Rate']]
+        color_scale = "RdYlGn"
         best_color = "darkgreen"
         worst_color = "darkred"
-    else:
-        col_name = {'Average Monthly Savings (₹)': 'Savings',
-                    'Average Monthly Income (₹)': 'TOTAL_INCOME',
-                    'Average Monthly Expenditure (₹)': 'TOTAL_EXPENDITURE'}[metric]
-        top_states = state_summary.nlargest(n_top_bottom, col_name)[['STATE', col_name]]
-        bottom_states = state_summary.nsmallest(n_top_bottom, col_name)[['STATE', col_name]]
-        unit = "₹"
+    elif metric == "Average Monthly Savings (₹)":
+        top_states = state_summary.nlargest(n_top, 'Savings')[['STATE', 'Savings']]
+        bottom_states = state_summary.nsmallest(n_bottom, 'Savings')[['STATE', 'Savings']]
+        color_scale = "RdYlGn"
+        best_color = "darkgreen"
+        worst_color = "darkred"
+    elif metric == "Average Monthly Income (₹)":
+        top_states = state_summary.nlargest(n_top, 'TOTAL_INCOME')[['STATE', 'TOTAL_INCOME']]
+        bottom_states = state_summary.nsmallest(n_bottom, 'TOTAL_INCOME')[['STATE', 'TOTAL_INCOME']]
+        color_scale = "Viridis"
         best_color = "gold"
         worst_color = "purple"
+    else:  # Expenditure
+        top_states = state_summary.nlargest(n_top, 'TOTAL_EXPENDITURE')[['STATE', 'TOTAL_EXPENDITURE']]
+        bottom_states = state_summary.nsmallest(n_bottom, 'TOTAL_EXPENDITURE')[['STATE', 'TOTAL_EXPENDITURE']]
+        color_scale = "Plasma"
+        best_color = "orange"
+        worst_color = "blue"
     
     # Format values correctly
-    top_states['display'] = top_states.iloc[:, 1].apply(lambda x: f"{x:,.1f}{unit}" if unit == "%" else f"₹{x:,.0f}")
-    bottom_states['display'] = bottom_states.iloc[:, 1].apply(lambda x: f"{x:,.1f}{unit}" if unit == "%" else f"₹{x:,.0f}")
+    if metric == "Savings Rate (%)":
+        top_states['display'] = top_states['Savings_Rate'].apply(lambda x: f"{x:.1f}%")
+        bottom_states['display'] = bottom_states['Savings_Rate'].apply(lambda x: f"{x:.1f}%")
+    elif metric == "Average Monthly Savings (₹)":
+        top_states['display'] = top_states['Savings'].apply(lambda x: f"₹{x:,.0f}")
+        bottom_states['display'] = bottom_states['Savings'].apply(lambda x: f"₹{x:,.0f}")
+    elif metric == "Average Monthly Income (₹)":
+        top_states['display'] = top_states['TOTAL_INCOME'].apply(lambda x: f"₹{x:,.0f}")
+        bottom_states['display'] = bottom_states['TOTAL_INCOME'].apply(lambda x: f"₹{x:,.0f}")
+    else:  # Expenditure
+        top_states['display'] = top_states['TOTAL_EXPENDITURE'].apply(lambda x: f"₹{x:,.0f}")
+        bottom_states['display'] = bottom_states['TOTAL_EXPENDITURE'].apply(lambda x: f"₹{x:,.0f}")
     
     top_list = " • ".join([f"**{row['STATE']}**: {row['display']}" for _, row in top_states.iterrows()])
     bottom_list = " • ".join([f"**{row['STATE']}**: {row['display']}" for _, row in bottom_states.iterrows()])
@@ -234,11 +244,11 @@ if section == "🌐 Dashboard Overview":
     # === BEAUTIFUL DYNAMIC CAPTION ===
     st.markdown(f"""
     <div style="background: linear-gradient(90deg, #1a1a2e, #16213e); padding: 20px; border-radius: 15px; color: white; font-size: 19px; margin: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.3); border-left: 6px solid #00d4ff;">
-        <p style="margin:0; font-size:22px; color:#00ff9d;">Top {n_top_bottom} States → {top_list}</p>
-        <p style="margin:10px 0 0 0; font-size:22px; color:#ff6b6b;">Bottom {n_top_bottom} States → {bottom_list}</p>
+        <p style="margin:0; font-size:22px; color:#00ff9d;">Top {n_top} States → {top_list}</p>
+        <p style="margin:10px 0 0 0; font-size:22px; color:#ff6b6b;">Bottom {n_bottom} States → {bottom_list}</p>
     </div>
     """, unsafe_allow_html=True)
-
+    
     # === FINAL MAP ===
     fig = px.choropleth(
         state_summary,
@@ -263,7 +273,7 @@ if section == "🌐 Dashboard Overview":
     
     st.plotly_chart(fig, use_container_width=True)
     
-    # INNOVATION 5: Quick Insights Cards
+    # INNOVATION 3: Quick Insights Cards
     st.subheader("💡 Automated Intelligence Insights")
     
     col1, col2 = st.columns(2)
@@ -297,7 +307,7 @@ if section == "🌐 Dashboard Overview":
         st.write("*Insight: Need region-specific strategies*")
         st.markdown('</div>', unsafe_allow_html=True)
 
-# INNOVATION 6: ENHANCED FINANCIAL ANALYSIS WITH PREDICTIVE INSIGHTS
+# INNOVATION 4: ENHANCED FINANCIAL ANALYSIS WITH PREDICTIVE INSIGHTS
 elif section == "💰 Financial Analysis":
     st.markdown('<div class="section-header">💰 Advanced Financial Intelligence</div>', unsafe_allow_html=True)
     
@@ -347,7 +357,7 @@ elif section == "💰 Financial Analysis":
         - Poor: Negative savings
         """)
 
-# INNOVATION 7: STATE COMPARISON ENGINE
+# INNOVATION 5: STATE COMPARISON ENGINE
 elif section == "🏙️ Regional Intelligence":
     st.markdown('<div class="section-header">🏙️ Regional Intelligence & Benchmarking</div>', unsafe_allow_html=True)
     
@@ -390,7 +400,7 @@ elif section == "🏙️ Regional Intelligence":
             state2: '{:,.0f}'
         }))
         
-        # INNOVATION 8: Competitive positioning
+        # INNOVATION 6: Competitive positioning
         st.subheader("🎯 Competitive Positioning")
         
         income_ratio = comparison_df[comparison_df['Metric'] == 'Avg Income'][state1].values[0] / comparison_df[comparison_df['Metric'] == 'Avg Income'][state2].values[0]
@@ -402,7 +412,7 @@ elif section == "🏙️ Regional Intelligence":
         else:
             st.warning(f"📉 **{state1} lags behind {state2} economically**")
 
-# INNOVATION 9: POLICY LAB - COMPLETELY NEW SECTION
+# INNOVATION 7: POLICY LAB - COMPLETELY NEW SECTION
 elif section == "🎯 Policy Lab":
     st.markdown('<div class="section-header">🎯 Policy Simulation Laboratory</div>', unsafe_allow_html=True)
     
@@ -514,7 +524,7 @@ elif section == "📈 Income Dynamics":
     fig_income = px.pie(values=percentages.values, names=labels, title="Income Sources Distribution")
     st.plotly_chart(fig_income, use_container_width=True)
     
-    # ADD INNOVATION: Income Mobility Analysis
+    # INNOVATION 8: Income Mobility Analysis
     st.subheader("📊 Income Mobility Predictors")
     
     col1, col2, col3 = st.columns(3)
@@ -617,7 +627,7 @@ elif section == "🔬 Advanced Analytics":
         fig_corr = px.imshow(corr_matrix, title="Correlation Heatmap", color_continuous_scale='RdBu')
         st.plotly_chart(fig_corr, use_container_width=True)
 
-# INNOVATION 10: Add Downloadable Insights Report
+# INNOVATION 9: Add Downloadable Insights Report
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📥 Export Intelligence")
 if st.sidebar.button("Generate Executive Report"):
@@ -633,7 +643,7 @@ st.markdown(
     """
 )
 
-# INNOVATION 11: Add Real-time Data Status
+# INNOVATION 10: Add Real-time Data Status
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📡 Platform Status")
 st.sidebar.success("🟢 Live & Operational")
