@@ -799,18 +799,6 @@ elif section == "📈 Income Dynamics":
         st.metric("Self-Production (Farming)", f"{self_prod_share:.1f}%", delta="Vulnerable to Shocks")
 
     st.success("Income Intelligence Engine Complete — Now with Rural/Urban + State-Level + Interactive Charts!")
-    
-    # INNOVATION 6: Income Mobility Analysis
-    st.subheader("📊 Income Mobility Predictors")
-    
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Education Impact", "+28%", "Graduate premium")
-    with col2:
-        st.metric("Occupation Boost", "+42%", "Professional advantage")
-    with col3:
-        st.metric("Regional Factor", "+58%", "Urban premium")
-
 # Enhanced existing sections
 elif section == "🛒 Spending Patterns":
     st.markdown('<div class="section-header">🛒 Consumer Behavior Intelligence</div>', unsafe_allow_html=True)
@@ -912,10 +900,3 @@ st.markdown(
     **Data Source:** National Income & Expenditure Survey
     """
 )
-
-# INNOVATION 7: Add Real-time Data Status
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 📡 Platform Status")
-st.sidebar.success("🟢 Live & Operational")
-st.sidebar.info(f"📊 {len(df_clean):,} households analyzed")
-st.sidebar.info(f"🕒 Last updated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}")
