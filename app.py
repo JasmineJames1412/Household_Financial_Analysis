@@ -78,20 +78,6 @@ st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎮 Policy Simulator")
 simulate_policy = st.sidebar.checkbox("Enable Policy Simulation")
 
-if simulate_policy:
-    policy_type = st.sidebar.selectbox(
-        "Policy Intervention:",
-        ["Income Boost", "Education Investment", "Rural Development", "Tax Reform"]
-    )
-    
-    if policy_type == "Income Boost":
-        income_increase = st.sidebar.slider("Income Increase (%)", 0, 50, 15)
-        target_region = st.sidebar.selectbox("Target Region:", ["RURAL", "URBAN", "ALL"])
-        
-    elif policy_type == "Education Investment":
-        edu_budget = st.sidebar.slider("Education Budget Increase (%)", 0, 100, 30)
-        target_states = st.sidebar.multiselect("Target States:", df_clean['STATE'].unique()[:5])
-
 # Navigation - UPDATED with innovative sections
 st.sidebar.markdown("---")
 st.sidebar.title("📊 Navigation")
@@ -183,86 +169,107 @@ if section == "🌐 Dashboard Overview":
         st.metric("💸 Savings Rate", f"{savings_rate:.1f}%", "Financial Health")
         st.markdown('</div>', unsafe_allow_html=True)
     
-# SIMPLE WORKING INDIA MAP
-st.subheader("🗺️ India Economic Map")
-
-# Create state summary
-state_summary = df_clean.groupby('STATE').agg({
-    'TOTAL_INCOME': 'mean',
-    'TOTAL_EXPENDITURE': 'mean',
-    'REGION_TYPE': lambda x: (x == 'URBAN').mean(),
-    'HH_WEIGHT_MS': 'count'
-}).reset_index()
-
-# Simple state name standardization
-state_mapping = {
-    'Jammu & Kashmir': 'Jammu and Kashmir',
-    'NCT of Delhi': 'Delhi', 
-    'Pondicherry': 'Puducherry',
-    'Uttaranchal': 'Uttarakhand'
-}
-
-state_summary['STATE_CLEAN'] = state_summary['STATE'].replace(state_mapping)
-
-# Create the map
-fig = px.choropleth(
-    state_summary,
-    locations='STATE_CLEAN',
-    locationmode='country names',
-    color='TOTAL_INCOME',
-    scope='asia',
-    hover_name='STATE',
-    hover_data={
-        'TOTAL_INCOME': ':.0f',
-        'TOTAL_EXPENDITURE': ':.0f'
-    },
-    color_continuous_scale="Viridis",
-    title="Average Household Income by State (₹)"
-)
-
-# Center on India
-fig.update_geos(
-    visible=False,
-    center={"lat": 22, "lon": 79},
-    projection_scale=5
-)
-
-fig.update_layout(height=600)
-st.plotly_chart(fig, use_container_width=True)
+    # FIXED INNOVATION 4: WORKING INDIA MAP
+    st.subheader("🗺️ Geographic Economic Heatmap of India")
     
-# INNOVATION 5: Quick Insights Cards
-st.subheader("💡 Automated Intelligence Insights")
+    # Create state-level summary for mapping
+    state_summary = df_clean.groupby('STATE').agg({
+        'TOTAL_INCOME': 'mean',
+        'TOTAL_EXPENDITURE': 'mean',
+        'REGION_TYPE': lambda x: (x == 'URBAN').mean(),
+        'HH_WEIGHT_MS': 'count'
+    }).reset_index()
     
-col1, col2 = st.columns(2)
+    state_summary.columns = ['STATE', 'Avg_Income', 'Avg_Expenditure', 'Urbanization_Rate', 'Household_Count']
+    state_summary['Income_Expenditure_Ratio'] = state_summary['Avg_Income'] / state_summary['Avg_Expenditure']
     
-with col1:
-    st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-    st.markdown("#### 🎯 Top Opportunity")
-    highest_income_state = state_summary.loc[state_summary['Avg_Income'].idxmax(), 'STATE']
-    st.write(f"**{highest_income_state}** leads with highest average income")
-    st.write("*Recommendation: Study successful economic policies*")
-    st.markdown('</div>', unsafe_allow_html=True)
+    # Standardize state names for Plotly
+    state_mapping = {
+        'Jammu & Kashmir': 'Jammu and Kashmir',
+        'NCT of Delhi': 'Delhi',
+        'Andaman & Nicobar Islands': 'Andaman and Nicobar Islands',
+        'Dadra & Nagar Haveli': 'Dadra and Nagar Haveli',
+        'Daman & Diu': 'Daman and Diu',
+        'Pondicherry': 'Puducherry',
+        'Uttaranchal': 'Uttarakhand'
+    }
+    
+    state_summary['STATE_STD'] = state_summary['STATE'].replace(state_mapping)
+    
+    # Create working India map
+    try:
+        fig_map = px.choropleth(
+            state_summary,
+            locations='STATE_STD',
+            locationmode='country names',
+            color='Avg_Income',
+            scope='asia',
+            hover_name='STATE',
+            hover_data={
+                'Avg_Income': ':.0f',
+                'Avg_Expenditure': ':.0f',
+                'Urbanization_Rate': ':.1%',
+                'Household_Count': ':,',
+                'STATE_STD': False
+            },
+            color_continuous_scale="Viridis",
+            title="Average Monthly Household Income by State (₹)",
+            labels={'Avg_Income': 'Monthly Income (₹)'}
+        )
         
-    st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-    st.markdown("#### ⚠️ Challenge Area")
-    lowest_savings_state = state_summary.loc[state_summary['Income_Expenditure_Ratio'].idxmin(), 'STATE']
-    st.write(f"**{lowest_savings_state}** shows lowest savings capacity")
-    st.write("*Recommendation: Focus on cost-of-living interventions*")
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-with col2:
-    st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-    st.markdown("#### 📈 Growth Engine")
-    st.write("**Wage income contributes 73%** to total household earnings")
-    st.write("*Insight: Labor market development is crucial*")
-    st.markdown('</div>', unsafe_allow_html=True)
+        # Center on India with proper zoom
+        fig_map.update_geos(
+            visible=False,
+            center={"lat": 22, "lon": 79},
+            projection_scale=4.5
+        )
         
-    st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
-    st.markdown("#### 🏘️ Regional Focus")
-    urban_rural_gap = state_summary['Urbanization_Rate'].std() * 100
-    st.write(f"**{urban_rural_gap:.1f}% variability** in urbanization rates")
-    st.write("*Insight: Need region-specific strategies*")
-    st.markdown('</div>', unsafe_allow_html=True)
+        fig_map.update_layout(
+            height=600,
+            margin={"r": 0, "t": 50, "l": 0, "b": 0}
+        )
+        
+        st.plotly_chart(fig_map, use_container_width=True)
+        
+    except Exception as e:
+        st.error(f"Map rendering failed: {str(e)}")
+        # Fallback: Show state data in a table
+        st.subheader("State-wise Economic Data (Fallback)")
+        st.dataframe(state_summary[['STATE', 'Avg_Income', 'Avg_Expenditure', 'Urbanization_Rate']].sort_values('Avg_Income', ascending=False), use_container_width=True)
+    
+    # INNOVATION 5: Quick Insights Cards
+    st.subheader("💡 Automated Intelligence Insights")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
+        st.markdown("#### 🎯 Top Opportunity")
+        highest_income_state = state_summary.loc[state_summary['Avg_Income'].idxmax(), 'STATE']
+        st.write(f"**{highest_income_state}** leads with highest average income")
+        st.write("*Recommendation: Study successful economic policies*")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
+        st.markdown("#### ⚠️ Challenge Area")
+        lowest_savings_state = state_summary.loc[state_summary['Income_Expenditure_Ratio'].idxmin(), 'STATE']
+        st.write(f"**{lowest_savings_state}** shows lowest savings capacity")
+        st.write("*Recommendation: Focus on cost-of-living interventions*")
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
+        st.markdown("#### 📈 Growth Engine")
+        st.write("**Wage income contributes 73%** to total household earnings")
+        st.write("*Insight: Labor market development is crucial*")
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        st.markdown('<div class="innovation-card">', unsafe_allow_html=True)
+        st.markdown("#### 🏘️ Regional Focus")
+        urban_rural_gap = state_summary['Urbanization_Rate'].std() * 100
+        st.write(f"**{urban_rural_gap:.1f}% variability** in urbanization rates")
+        st.write("*Insight: Need region-specific strategies*")
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # INNOVATION 6: ENHANCED FINANCIAL ANALYSIS WITH PREDICTIVE INSIGHTS
 elif section == "💰 Financial Analysis":
@@ -386,39 +393,47 @@ elif section == "🎯 Policy Lab":
             ["Rural Income Boost", "Education Investment", "Urban Job Creation", "Social Welfare Expansion"]
         )
         
-        if policy_scenario == "Rural Income Boost":
-            income_increase = st.slider("Rural Income Increase (%)", 5, 50, 20)
-            st.write(f"**Simulated Impact:** Rural incomes increase by {income_increase}%")
-            st.write("**Expected Outcomes:**")
-            st.write("- Rural-urban gap reduces by 15%")
-            st.write("- Agricultural spending increases")
-            st.write("- Regional migration patterns shift")
-            
-        elif policy_scenario == "Education Investment":
-            edu_budget = st.slider("Education Budget Increase (%)", 10, 100, 40)
-            st.write(f"**Simulated Impact:** Education budget increases by {edu_budget}%")
-            st.write("**Expected Outcomes:**")
-            st.write("- Higher education attainment in 5 years")
-            st.write("- 8-12% long-term income growth")
-            st.write("- Reduced intergenerational poverty")
+        if simulate_policy:
+            if policy_scenario == "Rural Income Boost":
+                income_increase = st.slider("Rural Income Increase (%)", 5, 50, 20)
+                target_region = st.selectbox("Target Region:", ["RURAL", "URBAN", "ALL"])
+                st.write(f"**Simulated Impact:** Rural incomes increase by {income_increase}%")
+                st.write("**Expected Outcomes:**")
+                st.write("- Rural-urban gap reduces by 15%")
+                st.write("- Agricultural spending increases")
+                st.write("- Regional migration patterns shift")
+                
+            elif policy_scenario == "Education Investment":
+                edu_budget = st.slider("Education Budget Increase (%)", 10, 100, 40)
+                target_states = st.multiselect("Target States:", df_clean['STATE'].unique()[:5])
+                st.write(f"**Simulated Impact:** Education budget increases by {edu_budget}%")
+                st.write("**Expected Outcomes:**")
+                st.write("- Higher education attainment in 5 years")
+                st.write("- 8-12% long-term income growth")
+                st.write("- Reduced intergenerational poverty")
+        else:
+            st.info("💡 Enable Policy Simulation in the sidebar to activate this feature")
     
     with col2:
-        # Show policy impact visualization
-        fig_policy = go.Figure()
-        
-        if policy_scenario == "Rural Income Boost":
-            fig_policy.add_trace(go.Bar(name='Before', x=['Rural', 'Urban'], y=[100, 158], marker_color='lightblue'))
-            fig_policy.add_trace(go.Bar(name='After', x=['Rural', 'Urban'], y=[100*(1+income_increase/100), 158], marker_color='blue'))
-            fig_policy.update_layout(title="Income Gap Reduction Simulation")
+        if simulate_policy:
+            # Show policy impact visualization
+            fig_policy = go.Figure()
             
-        elif policy_scenario == "Education Investment":
-            years = [0, 1, 2, 3, 4, 5]
-            income_growth = [100, 102, 105, 108, 111, 115]
-            fig_policy.add_trace(go.Scatter(x=years, y=income_growth, mode='lines+markers', name='With Investment'))
-            fig_policy.add_trace(go.Scatter(x=years, y=[100, 101, 102, 103, 104, 105], mode='lines+markers', name='Baseline'))
-            fig_policy.update_layout(title="Long-term Income Growth Projection", xaxis_title="Years", yaxis_title="Income Index")
-        
-        st.plotly_chart(fig_policy, use_container_width=True)
+            if policy_scenario == "Rural Income Boost":
+                fig_policy.add_trace(go.Bar(name='Before', x=['Rural', 'Urban'], y=[100, 158], marker_color='lightblue'))
+                fig_policy.add_trace(go.Bar(name='After', x=['Rural', 'Urban'], y=[100*(1+income_increase/100), 158], marker_color='blue'))
+                fig_policy.update_layout(title="Income Gap Reduction Simulation")
+                
+            elif policy_scenario == "Education Investment":
+                years = [0, 1, 2, 3, 4, 5]
+                income_growth = [100, 102, 105, 108, 111, 115]
+                fig_policy.add_trace(go.Scatter(x=years, y=income_growth, mode='lines+markers', name='With Investment'))
+                fig_policy.add_trace(go.Scatter(x=years, y=[100, 101, 102, 103, 104, 105], mode='lines+markers', name='Baseline'))
+                fig_policy.update_layout(title="Long-term Income Growth Projection", xaxis_title="Years", yaxis_title="Income Index")
+            
+            st.plotly_chart(fig_policy, use_container_width=True)
+        else:
+            st.info("Enable Policy Simulation to see visualizations")
     
     st.markdown("---")
     st.subheader("📋 Policy Recommendation Report")
@@ -445,7 +460,33 @@ elif section == "🎯 Policy Lab":
 # Update existing sections to include "Intelligence" in titles and add insights
 elif section == "📈 Income Dynamics":
     st.markdown('<div class="section-header">📈 Income Source Intelligence</div>', unsafe_allow_html=True)
-    # ... (keep your existing income analysis but add insights)
+    
+    # Income Sources Breakdown
+    income_cols = [col for col in df_clean.columns if col.startswith('INCOME_OF_')]
+    specific_cols = [col for col in income_cols if 'ALL_SOURCES' not in col]
+    
+    income_sums = df_clean[specific_cols].sum()
+    total_income = income_sums.sum()
+    percentages = (income_sums / total_income) * 100
+    
+    short_labels = {
+        'INCOME_OF_ALL_MEMBERS_FROM_WAGES': 'Wages',
+        'INCOME_OF_ALL_MEMBERS_FROM_PENSION': 'Pension',
+        'INCOME_OF_ALL_MEMBERS_FROM_DIVIDEND': 'Dividend',
+        'INCOME_OF_ALL_MEMBERS_FROM_INTEREST': 'Interest',
+        'INCOME_OF_ALL_MEMBERS_FROM_FD_PF_INSURANCE': 'FD/PF/Insurance',
+        'INCOME_OF_HOUSEHOLD_FROM_RENT': 'Rent',
+        'INCOME_OF_HOUSEHOLD_FROM_SELF_PRODUCTION': 'Self-Production',
+        'INCOME_OF_HOUSEHOLD_FROM_PRIVATE_TRANSFERS': 'Private Transfers',
+        'INCOME_OF_HOUSEHOLD_FROM_GOVERNMENT_TRANSFERS': 'Govt Transfers',
+        'INCOME_OF_HOUSEHOLD_FROM_BUSINESS_PROFIT': 'Business Profit',
+        'INCOME_OF_HOUSEHOLD_FROM_SALE_OF_ASSET': 'Asset Sale'
+    }
+    
+    labels = [short_labels.get(col, col) for col in specific_cols]
+    
+    fig_income = px.pie(values=percentages.values, names=labels, title="Income Sources Distribution")
+    st.plotly_chart(fig_income, use_container_width=True)
     
     # ADD INNOVATION: Income Mobility Analysis
     st.subheader("📊 Income Mobility Predictors")
@@ -461,19 +502,94 @@ elif section == "📈 Income Dynamics":
 # Enhanced existing sections
 elif section == "🛒 Spending Patterns":
     st.markdown('<div class="section-header">🛒 Consumer Behavior Intelligence</div>', unsafe_allow_html=True)
-    # ... (your existing expenditure analysis)
+    
+    exp_cols = [
+        'MONTHLY_EXPENSE_ON_FOOD', 'MONTHLY_EXPENSE_ON_INTOXICANTS', 'MONTHLY_EXPENSE_ON_CLOTHING_AND_FOOTWEAR',
+        'MONTHLY_EXPENSE_ON_COSMETIC_AND_TOILETRIES', 'MONTHLY_EXPENSE_ON_APPLIANCES', 'MONTHLY_EXPENSE_ON_RESTAURANTS',
+        'MONTHLY_EXPENSE_ON_BILLS_AND_RENT', 'MONTHLY_EXPENSE_ON_POWER_AND_FUEL', 'MONTHLY_EXPENSE_ON_TRANSPORT',
+        'MONTHLY_EXPENSE_ON_COMMUNICATION_AND_INFO', 'MONTHLY_EXPENSE_ON_EDUCATION', 'MONTHLY_EXPENSE_ON_HEALTH',
+        'MONTHLY_EXPENSE_ON_ALL_EMIS', 'MONTHLY_EXPENSE_ON_MISCELLANEOUS'
+    ]
+    
+    exp_sums = df_clean[exp_cols].sum()
+    total_expense = exp_sums.sum()
+    percentages = (exp_sums / total_expense) * 100
+    
+    short_labels = {
+        'MONTHLY_EXPENSE_ON_FOOD': 'Food',
+        'MONTHLY_EXPENSE_ON_INTOXICANTS': 'Intoxicants',
+        'MONTHLY_EXPENSE_ON_CLOTHING_AND_FOOTWEAR': 'Clothing/Footwear',
+        'MONTHLY_EXPENSE_ON_COSMETIC_AND_TOILETRIES': 'Cosmetics/Toiletries',
+        'MONTHLY_EXPENSE_ON_APPLIANCES': 'Appliances',
+        'MONTHLY_EXPENSE_ON_RESTAURANTS': 'Restaurants',
+        'MONTHLY_EXPENSE_ON_BILLS_AND_RENT': 'Bills/Rent',
+        'MONTHLY_EXPENSE_ON_POWER_AND_FUEL': 'Power/Fuel',
+        'MONTHLY_EXPENSE_ON_TRANSPORT': 'Transport',
+        'MONTHLY_EXPENSE_ON_COMMUNICATION_AND_INFO': 'Communication',
+        'MONTHLY_EXPENSE_ON_EDUCATION': 'Education',
+        'MONTHLY_EXPENSE_ON_HEALTH': 'Health',
+        'MONTHLY_EXPENSE_ON_ALL_EMIS': 'EMIs',
+        'MONTHLY_EXPENSE_ON_MISCELLANEOUS': 'Miscellaneous'
+    }
+    
+    labels = [short_labels.get(col, col) for col in exp_cols]
+    
+    fig_exp = px.bar(x=labels, y=percentages.values, title="Expenditure Distribution")
+    fig_exp.update_layout(xaxis_tickangle=45)
+    st.plotly_chart(fig_exp, use_container_width=True)
 
 elif section == "👥 Demographic Insights":
     st.markdown('<div class="section-header">👥 Demographic Intelligence Engine</div>', unsafe_allow_html=True)
-    # ... (your existing demographic analysis)
+    
+    demographic_var = st.selectbox("Select Demographic Variable:", ['AGE_GROUP', 'OCCUPATION_GROUP', 'EDUCATION_GROUP', 'GENDER_GROUP', 'SIZE_GROUP'])
+    counts = df_clean[demographic_var].value_counts(normalize=True) * 100
+    
+    fig_demo = px.bar(x=counts.values, y=counts.index, orientation='h', title=f'Distribution of {demographic_var}')
+    st.plotly_chart(fig_demo, use_container_width=True)
 
 elif section == "⚖️ Inequality Explorer":
     st.markdown('<div class="section-header">⚖️ Inequality Intelligence Platform</div>', unsafe_allow_html=True)
-    # ... (your existing inequality analysis)
+    
+    # Gini coefficient function
+    def gini_coefficient(df, value_col, weight_col):
+        df2 = df[[value_col, weight_col]].dropna()
+        if df2.shape[0] == 0:
+            return np.nan
+        df_sorted = df2.sort_values(value_col)
+        values = df_sorted[value_col].astype(float).values
+        weights = df_sorted[weight_col].astype(float).values
+        total_weight = weights.sum()
+        if total_weight == 0 or values.sum() == 0:
+            return np.nan
+        w = weights / total_weight
+        cumw = np.concatenate(([0.0], np.cumsum(w)))
+        cumv = np.concatenate(([0.0], np.cumsum(values * w) / np.sum(values * w)))
+        auc = np.trapz(cumv, cumw)
+        gini = 1 - 2 * auc
+        return gini
+    
+    gini_income_rural = gini_coefficient(df_clean[df_clean['REGION_TYPE'] == 'RURAL'], 'TOTAL_INCOME', 'HH_WEIGHT_MS')
+    gini_income_urban = gini_coefficient(df_clean[df_clean['REGION_TYPE'] == 'URBAN'], 'TOTAL_INCOME', 'HH_WEIGHT_MS')
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("Rural Income Gini", f"{gini_income_rural:.3f}")
+    with col2:
+        st.metric("Urban Income Gini", f"{gini_income_urban:.3f}")
 
 elif section == "🔬 Advanced Analytics":
     st.markdown('<div class="section-header">🔬 Predictive Intelligence Suite</div>', unsafe_allow_html=True)
-    # ... (your existing statistical analysis)
+    
+    st.subheader("Correlation Analysis")
+    numeric_cols = ['TOTAL_INCOME', 'TOTAL_EXPENDITURE'] + [
+        col for col in df_clean.columns if 'MONTHLY_EXPENSE_ON_' in col or 'INCOME_OF_' in col
+    ]
+    numeric_cols = [col for col in numeric_cols if col in df_clean.columns][:10]
+    
+    if st.checkbox("Show Correlation Heatmap"):
+        corr_matrix = df_clean[numeric_cols].corr()
+        fig_corr = px.imshow(corr_matrix, title="Correlation Heatmap", color_continuous_scale='RdBu')
+        st.plotly_chart(fig_corr, use_container_width=True)
 
 # INNOVATION 10: Add Downloadable Insights Report
 st.sidebar.markdown("---")
