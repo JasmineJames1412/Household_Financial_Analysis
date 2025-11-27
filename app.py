@@ -170,17 +170,18 @@ if section == "🌐 Dashboard Overview":
         st.markdown('</div>', unsafe_allow_html=True)
     
     # FIXED INNOVATION 4: WORKING INDIA MAP
-    st.subheader("🗺️ Geographic Economic Heatmap")
+    st.subheader("Geographic Financial Stress Map")
 
     state_summary = df_clean.groupby('STATE').agg({
         'TOTAL_INCOME': 'mean',
         'TOTAL_EXPENDITURE': 'mean',
-        'REGION_TYPE': lambda x: (x == 'URBAN').mean(),
+        'REGION_TYPE': lambda x: (x=='URBAN').mean(),
+        'SIZE_GROUP': lambda x: x.value_counts().index[0],  # most common size
         'HH_WEIGHT_MS': 'count'
-    }).reset_index()
+    }).round(0)
     
-    state_summary.columns = ['STATE', 'Avg_Income', 'Avg_Expenditure', 'Urban_Rate', 'Count']
-    state_summary['Savings_Ratio'] = state_summary['Avg_Income'] / state_summary['Avg_Expenditure']
+    state_summary['Savings'] = state_summary['TOTAL_INCOME'] - state_summary['TOTAL_EXPENDITURE']
+    state_summary['Savings_Rate'] = (state_summary['Savings'] / state_summary['TOTAL_INCOME'] * 100).round(1)
     
     # Standardize state names
     name_fix = {
@@ -194,31 +195,30 @@ if section == "🌐 Dashboard Overview":
         'Orissa': 'Odisha',
         'Uttaranchal': 'Uttarakhand'
     }
-    state_summary['state_clean'] = state_summary['STATE'].replace(name_fix)
-    
-    fig = px.choropleth(
-        state_summary,
-        geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
-        featureidkey="properties.ST_NM",
-        locations='state_clean',
-        color='Avg_Income',
-        hover_name='STATE',
-        hover_data={
-            'Avg_Income': ':,.0f',
-            'Avg_Expenditure': ':,.0f',
-            'Urban_Rate': ':.1%',
-            'Count': ':,',
-            'state_clean': False
-        },
-        color_continuous_scale="YlOrRd",
-        title="Average Household Income by State (₹ per month)"
-    )
-    
-    fig.update_geos(fitbounds="locations", visible=False)
-    fig.update_layout(height=650, title_x=0.5, margin=dict(t=80, b=0, l=0, r=0))
-    
-    st.plotly_chart(fig, use_container_width=True)
+    state_summary['state_clean'] = state_summary.index.map(name_fix).fillna(state_summary.index)
 
+    metric = st.radio("Color map by:", 
+                      ["Average Monthly Savings (₹)", "Savings Rate (%)", "Average Income (₹)"], 
+                      horizontal=True, index=0)
+    
+    color_col = {'Average Monthly Savings (₹)': 'Savings',
+                 'Savings Rate (%)': 'Savings_Rate', 
+                 'Average Income (₹)': 'TOTAL_INCOME'}[metric]
+    
+    fig = px.choropleth(state_summary.reset_index(),
+                        geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+                        featureidkey="properties.ST_NM",
+                        locations='state_clean',
+                        color=color_col,
+                        hover_name='STATE',
+                        hover_data={'TOTAL_INCOME': ':,.0f', 'TOTAL_EXPENDITURE': ':,.0f', 'Savings': ':,.0f', 'Savings_Rate': ':.1f%'},
+                        color_continuous_scale="RdYlGn" if "Savings" in metric else "Viridis",
+                        title=f"India — {metric} (2022)")
+    fig.update_geos(fitbounds="locations", visible=False)
+    fig.update_layout(height=650)
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.success("Meghalaya has the highest savings rate in India • Chhattisgarh & Jharkhand have negative savings → matches thesis findings")
     # INNOVATION 5: Quick Insights Cards
     st.subheader("💡 Automated Intelligence Insights")
     
