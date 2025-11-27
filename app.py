@@ -1073,8 +1073,8 @@ elif section == "🛒 Spending Patterns":
 
     st.success("Consumer Spending Intelligence Engine Complete — Fully Consistent with Income Module | 4 Analysis Modes | Policy-Ready Insights")
 
-elif section == "Demographic Insights":
-    st.markdown('<div class="section-header">Demographic Intelligence Engine</div>', unsafe_allow_html=True)
+elif section == "👥 Demographic Insights":
+    st.markdown('<div class="section-header">👥 Demographic Intelligence Engine</div>', unsafe_allow_html=True)
     
     # === INNOVATION 1: SMART DEMOGRAPHIC SELECTOR WITH IMPACT PREVIEW ===
     demo_options = {
@@ -1125,20 +1125,22 @@ elif section == "Demographic Insights":
         st.subheader(f"Financial Outcomes by {demo_options[selected_var]}")
         
         # Calculate key metrics by group
-        metrics = df_clean.groupby(selected_var).agg({
-            'TOTAL_INCOME': lambda x: np.average(x, weights=df_clean.loc[x.index, 'HH_WEIGHT_MS']),
-            'TOTAL_EXPENDITURE': lambda x: np.average(x, weights=df_clean.loc[x.index, 'HH_WEIGHT_MS']),
-            'HH_WEIGHT_MS': 'sum'
-        }).round(0)
+        def weighted_avg(group):
+            return np.average(group['TOTAL_INCOME'], weights=group['HH_WEIGHT_MS'])
+        
+        metrics = df_clean.groupby(selected_var).apply(
+            lambda x: pd.Series({
+                'TOTAL_INCOME': np.average(x['TOTAL_INCOME'], weights=x['HH_WEIGHT_MS']),
+                'TOTAL_EXPENDITURE': np.average(x['TOTAL_EXPENDITURE'], weights=x['HH_WEIGHT_MS']),
+                'HH_WEIGHT_MS': x['HH_WEIGHT_MS'].sum()
+            })
+        ).round(0)
         
         metrics['Savings_Rate'] = ((metrics['TOTAL_INCOME'] - metrics['TOTAL_EXPENDITURE']) / metrics['TOTAL_INCOME'] * 100).round(1)
         metrics['Household_Count'] = metrics['HH_WEIGHT_MS']
         metrics = metrics.sort_values('TOTAL_INCOME', ascending=False)
         
-        # Normalize income for better visualization
-        max_income = metrics['TOTAL_INCOME'].max()
-        metrics['Income_Normalized'] = (metrics['TOTAL_INCOME'] / max_income * 100).round(1)
-        
+        # Create the dual-axis chart
         fig_fin = go.Figure()
         
         # Income bars
@@ -1161,28 +1163,28 @@ elif section == "Demographic Insights":
             line=dict(color='#ff7f0e', width=4),
             text=metrics['Savings_Rate'].apply(lambda x: f"{x}%"),
             textposition="top center",
-            yaxis="y2"
+            yaxis="y"
         ))
         
         fig_fin.update_layout(
             title=f"Income & Savings by {demo_options[selected_var]} (Weighted Average)",
             height=600,
             xaxis=dict(title="Monthly Income (₹)"),
-            yaxis=dict(title=demo_options[selected, selected_var]),
-            yaxis2=dict(title="Savings Rate (%)", overlaying="y", side="right", range=[-20, 50], tickfont=dict(color="#ff7f0e")),
+            yaxis=dict(title=demo_options[selected_var]),
             legend=dict(x=0.7, y=1.1, orientation="h")
         )
         st.plotly_chart(fig_fin, use_container_width=True)
         
         # Highlight top and bottom
-        top_group = metrics.iloc[0]
-        bottom_group = metrics.iloc[-1]
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.success(f"**Best Performing Group**\n\n**{top_group.name}**\nIncome: ₹{top_group['TOTAL_INCOME']:,.0f}\nSavings Rate: {top_group['Savings_Rate']:.1f}%")
-        with col2:
-            st.error(f"**Most Vulnerable Group**\n\n**{bottom_group.name}**\nIncome: ₹{bottom_group['TOTAL_INCOME']:,.0f}\nSavings Rate: {bottom_group['Savings_Rate']:.1f}%")
+        if len(metrics) > 0:
+            top_group = metrics.iloc[0]
+            bottom_group = metrics.iloc[-1]
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.success(f"**Best Performing Group**\n\n**{top_group.name}**\nIncome: ₹{top_group['TOTAL_INCOME']:,.0f}\nSavings Rate: {top_group['Savings_Rate']:.1f}%")
+            with col2:
+                st.error(f"**Most Vulnerable Group**\n\n**{bottom_group.name}**\nIncome: ₹{bottom_group['TOTAL_INCOME']:,.0f}\nSavings Rate: {bottom_group['Savings_Rate']:.1f}%")
 
     with tab3:
         st.subheader("Demographic Drivers of Inequality & Mobility")
@@ -1216,19 +1218,21 @@ elif section == "Demographic Insights":
             st.plotly_chart(fig_mob, use_container_width=True)
             
             # Key insight
-            top_mobility = mobility['Top 20%'].idxmax()
-            st.success(f"**Highest upward mobility**: **{top_mobility}** → {mobility.loc[top_mobility, 'Top 20%']:.1f}% chance of reaching Top 20% income")
+            if 'Top 20%' in mobility.columns:
+                top_mobility = mobility['Top 20%'].idxmax()
+                st.success(f"**Highest upward mobility**: **{top_mobility}** → {mobility.loc[top_mobility, 'Top 20%']:.1f}% chance of reaching Top 20% income")
 
         # === INNOVATION 4: GENDER x EDUCATION x INCOME INTERACTION ===
         if selected_var == 'GENDER_GROUP':
             st.markdown("#### Gender-Education-Income Nexus")
             
-            gender_edu = df_clean.groupby(['GENDER_GROUP', 'EDUCATION_GROUP']).agg({
-                'TOTAL_INCOME': lambda x: np.average(x, weights=df_clean.loc[x.index, 'HH_WEIGHT_MS']),
-                'HH_WEIGHT_MS': 'sum'
-            }).round(0)
+            gender_edu = df_clean.groupby(['GENDER_GROUP', 'EDUCATION_GROUP']).apply(
+                lambda x: pd.Series({
+                    'TOTAL_INCOME': np.average(x['TOTAL_INCOME'], weights=x['HH_WEIGHT_MS']),
+                    'HH_WEIGHT_MS': x['HH_WEIGHT_MS'].sum()
+                })
+            ).round(0).reset_index()
             
-            gender_edu = gender_edu.reset_index()
             fig_gender = px.bar(
                 gender_edu, 
                 x='EDUCATION_GROUP', 
@@ -1245,15 +1249,18 @@ elif section == "Demographic Insights":
                 if len(grad_data) == 2:
                     male_inc = grad_data[grad_data['GENDER_GROUP'] == 'Male']['TOTAL_INCOME'].iloc[0]
                     female_inc = grad_data[grad_data['GENDER_GROUP'] == 'Female']['TOTAL_INCOME'].iloc[0]
-                    gender_gap = ((male_inc - female_inc) / female_inc * 100).round(1)
-                    st.warning(f"**Graduate Gender Pay Gap**: Male-headed households earn **+{gender_gap}%** more than female-headed ones")
+                    if female_inc > 0:
+                        gender_gap = ((male_inc - female_inc) / female_inc * 100).round(1)
+                        st.warning(f"**Graduate Gender Pay Gap**: Male-headed households earn **+{gender_gap}%** more than female-headed ones")
 
         # === INNOVATION 5: URBAN-RURAL DEMOGRAPHIC PREMIUM ===
         st.markdown("#### Urban vs Rural Premium by Demographic Group")
         
-        urban_rural = df_clean.groupby([selected_var, 'REGION_TYPE']).agg({
-            'TOTAL_INCOME': lambda x: np.average(x, weights=df_clean.loc[x.index, 'HH_WEIGHT_MS'])
-        }).round(0).reset_index()
+        urban_rural = df_clean.groupby([selected_var, 'REGION_TYPE']).apply(
+            lambda x: pd.Series({
+                'TOTAL_INCOME': np.average(x['TOTAL_INCOME'], weights=x['HH_WEIGHT_MS'])
+            })
+        ).round(0).reset_index()
         
         pivot = urban_rural.pivot(index=selected_var, columns='REGION_TYPE', values='TOTAL_INCOME').fillna(0)
         if 'URBAN' in pivot.columns and 'RURAL' in pivot.columns:
@@ -1273,9 +1280,10 @@ elif section == "Demographic Insights":
             fig_prem.update_traces(textposition='outside')
             st.plotly_chart(fig_prem, use_container_width=True)
             
-            max_premium = pivot['Urban_Premium_%'].max()
-            max_group = pivot['Urban_Premium_%'].idxmax()
-            st.info(f"**Highest Urban Advantage**: **{max_group}** gain **+{max_premium:.0f}%** income by living in urban areas")
+            if len(pivot) > 0:
+                max_premium = pivot['Urban_Premium_%'].max()
+                max_group = pivot['Urban_Premium_%'].idxmax()
+                st.info(f"**Highest Urban Advantage**: **{max_group}** gain **+{max_premium:.0f}%** income by living in urban areas")
 
     # === FINAL INTELLIGENCE SUMMARY ===
     st.markdown("---")
