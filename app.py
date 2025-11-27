@@ -1168,7 +1168,7 @@ elif section == "Demographic Insights":
             title=f"Income & Savings by {demo_options[selected_var]} (Weighted Average)",
             height=600,
             xaxis=dict(title="Monthly Income (₹)"),
-            yaxis=dict(title=demo_options[selected selected_var]),
+            yaxis=dict(title=demo_options[selected, selected_var]),
             yaxis2=dict(title="Savings Rate (%)", overlaying="y", side="right", range=[-20, 50], tickfont=dict(color="#ff7f0e")),
             legend=dict(x=0.7, y=1.1, orientation="h")
         )
