@@ -36,16 +36,6 @@ st.markdown("""
         background-color: #0a0a1a;
     }
     
-    /* Remove sidebar padding and margins */
-    .css-1d391kg {
-        padding-top: 0rem;
-        padding-bottom: 0rem;
-    }
-    
-    .block-container {
-        padding-top: 2rem;
-    }
-    
     /* Headers with gold/orange theme */
     .main-header {
         font-size: 3rem;
@@ -96,15 +86,6 @@ st.markdown("""
     /* Sidebar styling */
     .css-1d391kg, .css-1lcbmhc {
         background-color: #0a0a1a;
-    }
-    
-    /* Remove top padding from sidebar */
-    section[data-testid="stSidebar"] {
-        padding-top: 0rem;
-    }
-    
-    section[data-testid="stSidebar"] > div {
-        padding-top: 0rem;
     }
     
     /* REMOVE the problematic radio button styling - let Streamlit handle it */
@@ -167,7 +148,6 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-
 # ===================================================================
 # UPDATED COLOR SCHEMES FOR CHARTS
 # ===================================================================
