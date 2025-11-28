@@ -27,43 +27,160 @@ st.set_page_config(
 )
 
 # ===================================================================
-# CUSTOM CSS STYLING
+# CUSTOM CSS STYLING - UPDATED TO MATCH PPT THEME
 # ===================================================================
 st.markdown("""
 <style>
+    /* Main background */
+    .stApp {
+        background-color: #0a0a1a;
+    }
+    
+    /* Headers with gold/orange theme */
     .main-header {
         font-size: 3rem;
-        color: #1f77b4;
+        color: #FFD700;
         text-align: center;
         margin-bottom: 2rem;
         font-weight: bold;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        text-shadow: 2px 2px 4px rgba(255, 215, 0, 0.3);
+        background: linear-gradient(135deg, #0a0a1a, #1a1a2e);
+        padding: 2rem;
+        border-radius: 15px;
+        border: 2px solid #FFA500;
     }
+    
     .section-header {
         font-size: 2rem;
-        color: #1f77b4;
+        color: #FFD700;
         margin-top: 2rem;
         margin-bottom: 1rem;
-        border-bottom: 3px solid #1f77b4;
+        border-bottom: 3px solid #FFA500;
         padding-bottom: 0.5rem;
+        background: linear-gradient(90deg, #0a0a1a, #1a1a2e);
+        padding: 1rem;
+        border-radius: 10px;
     }
+    
+    /* Cards with dark navy background and gold borders */
     .innovation-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         padding: 1.5rem;
         border-radius: 15px;
         color: white;
         margin: 1rem 0;
+        border: 2px solid #FFA500;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
     }
+    
     .metric-card {
-        background: white;
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
         padding: 1rem;
         border-radius: 10px;
-        border-left: 5px solid #1f77b4;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid #FFD700;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         margin: 0.5rem 0;
+        color: white;
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg, .css-1lcbmhc {
+        background-color: #0a0a1a;
+    }
+    
+    /* Radio buttons and select boxes */
+    .st-bb, .st-bc, .st-bd, .st-be {
+        background-color: #1a1a2e;
+        color: white;
+    }
+    
+    /* Dataframe styling */
+    .dataframe {
+        background-color: #1a1a2e;
+        color: white;
+    }
+    
+    /* Metric containers */
+    [data-testid="metric-container"] {
+        background-color: #1a1a2e;
+        border: 1px solid #FFA500;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+    
+    /* Success, info, warning messages */
+    .stSuccess {
+        background-color: #1a3a1a;
+        border: 1px solid #00FF00;
+        color: white;
+    }
+    
+    .stInfo {
+        background-color: #1a2a3a;
+        border: 1px solid #00FFFF;
+        color: white;
+    }
+    
+    .stWarning {
+        background-color: #3a2a1a;
+        border: 1px solid #FFA500;
+        color: white;
+    }
+    
+    .stError {
+        background-color: #3a1a1a;
+        border: 1px solid #FF4444;
+        color: white;
+    }
+    
+    /* Tab styling */
+    .stTabs [data-baseweb="tab-list"] {
+        background-color: #1a1a2e;
+        gap: 2px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        background-color: #1a1a2e;
+        color: white;
+        border: 1px solid #FFA500;
+        border-radius: 5px 5px 0 0;
+    }
+    
+    .stTabs [aria-selected="true"] {
+        background-color: #FFA500;
+        color: #0a0a1a;
     }
 </style>
 """, unsafe_allow_html=True)
+
+# ===================================================================
+# UPDATED COLOR SCHEMES FOR CHARTS
+# ===================================================================
+
+# Define color schemes that match the PPT theme
+PPT_COLORS = {
+    'primary_gold': '#FFD700',
+    'secondary_orange': '#FFA500', 
+    'accent_teal': '#00FFFF',
+    'accent_cyan': '#00CED1',
+    'dark_navy': '#0a0a1a',
+    'medium_navy': '#1a1a2e',
+    'light_navy': '#16213e',
+    'chart_yellow': '#FFD700',
+    'chart_blue': '#1E90FF',
+    'chart_orange': '#FFA500',
+    'chart_teal': '#00CED1'
+}
+
+# Update chart color sequences throughout the app
+CHART_COLOR_SEQUENCE = [PPT_COLORS['chart_yellow'], PPT_COLORS['chart_blue'], 
+                       PPT_COLORS['chart_orange'], PPT_COLORS['chart_teal']]
+
+CHART_COLOR_SCALES = {
+    'sequential': 'Viridis',
+    'diverging': 'RdYlBu',
+    'qualitative': CHART_COLOR_SEQUENCE
+}
 
 # ===================================================================
 # MAIN TITLE AND NAVIGATION
@@ -1703,27 +1820,67 @@ elif section == "🎯 Policy Lab":
     """)
 
 # ===================================================================
-# FINAL FOOTER
+# UPDATED FOOTER WITH PPT THEME
 # ===================================================================
 st.markdown("---")
 st.markdown(
-    """
-    <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 15px;">
-        <h2>Household Financial Intelligence Platform</h2>
-        <p><strong>Academic Research Platform</strong><br>
+    f"""
+    <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, {PPT_COLORS['dark_navy']}, {PPT_COLORS['medium_navy']}); color: white; border-radius: 15px; border: 2px solid {PPT_COLORS['primary_gold']};">
+        <h2 style="color: {PPT_COLORS['primary_gold']};">Household Financial Intelligence Platform</h2>
+        <p><strong style="color: {PPT_COLORS['accent_teal']};">Academic Research Platform</strong><br>
         Analyzing India's Household Economic Landscape</p>
-        <p>Data:  CMIE’s Consumer Pyramids Household Survey (CPHS), Wave 28 (Aug 2022) </p>
+        <p style="color: {PPT_COLORS['accent_cyan']};">Data: CMIE's Consumer Pyramids Household Survey (CPHS), Wave 28 (Aug 2022)</p>
     </div>
     """, unsafe_allow_html=True
 )
 
 # ===================================================================
-# PLATFORM METRICS
+# UPDATED SIDEBAR METRICS WITH PPT THEME
 # ===================================================================
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📊 Platform Metrics")
-st.sidebar.success("🟢 Analysis Ready")
-st.sidebar.info(f"🏠 {len(df_clean):,} Households")
-st.sidebar.info(f"🗺️ {df_clean['STATE'].nunique():,} States/UTs")
-st.sidebar.info(f"🏙️ {len(df_clean[df_clean['REGION_TYPE']=='URBAN']):,} Urban")
-st.sidebar.info(f"🌾 {len(df_clean[df_clean['REGION_TYPE']=='RURAL']):,} Rural")
+st.sidebar.markdown(f"""
+<div style="color: {PPT_COLORS['primary_gold']}; font-size: 1.2rem; font-weight: bold; text-align: center;">
+📊 Platform Metrics
+</div>
+""", unsafe_allow_html=True)
+
+# Custom metric styling
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
+            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['primary_gold']}; 
+            margin: 0.5rem 0; color: white;">
+    <div style="color: {PPT_COLORS['accent_teal']}; font-weight: bold;">🟢 Analysis Ready</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
+            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['chart_blue']}; 
+            margin: 0.5rem 0; color: white;">
+    <div>🏠 {len(df_clean):,} Households</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
+            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['chart_orange']}; 
+            margin: 0.5rem 0; color: white;">
+    <div>🗺️ {df_clean['STATE'].nunique():,} States/UTs</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
+            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['accent_teal']}; 
+            margin: 0.5rem 0; color: white;">
+    <div>🏙️ {len(df_clean[df_clean['REGION_TYPE']=='URBAN']):,} Urban</div>
+</div>
+""", unsafe_allow_html=True)
+
+st.sidebar.markdown(f"""
+<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
+            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['chart_yellow']}; 
+            margin: 0.5rem 0; color: white;">
+    <div>🌾 {len(df_clean[df_clean['REGION_TYPE']=='RURAL']):,} Rural</div>
+</div>
+""", unsafe_allow_html=True)
