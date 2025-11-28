@@ -1646,7 +1646,7 @@ st.markdown(
         <h2>Household Financial Intelligence Platform</h2>
         <p><strong>Academic Research Platform</strong><br>
         Analyzing India's Household Economic Landscape</p>
-        <p>Data: CMIE CPHS Wave 28 | Methodology: Weighted National Analysis</p>
+        <p>Data:  CMIE’s Consumer Pyramids Household Survey (CPHS), Wave 28 (Aug 2022) </p>
     </div>
     """, unsafe_allow_html=True
 )
@@ -1661,4 +1661,3 @@ st.sidebar.info(f"🏠 {len(df_clean):,} Households")
 st.sidebar.info(f"🗺️ {df_clean['STATE'].nunique():,} States/UTs")
 st.sidebar.info(f"🏙️ {len(df_clean[df_clean['REGION_TYPE']=='URBAN']):,} Urban")
 st.sidebar.info(f"🌾 {len(df_clean[df_clean['REGION_TYPE']=='RURAL']):,} Rural")
-st.sidebar.info(f"📅 Dataset: CPHS Wave 28 (Aug 2022)")
