@@ -1459,70 +1459,159 @@ elif section == "🔬 Advanced Analytics":
     with tab1:
         st.subheader("What Predicts Household Income? (Tree-Based Importance)")
         
+        # Create a clean copy for modeling
         df_model = df_clean.copy()
+        
+        # Select only numeric and categorical features that exist
+        available_features = []
+        for col in ['REGION_TYPE', 'EDUCATION_GROUP', 'OCCUPATION_GROUP', 'GENDER_GROUP', 'SIZE_GROUP', 'STATE']:
+            if col in df_model.columns:
+                available_features.append(col)
+        
+        # Prepare features - handle missing values and convert to numeric
+        X = df_model[available_features].copy()
+        y = np.log1p(df_model['TOTAL_INCOME'])  # Log transform for better modeling
+        
+        # Handle categorical variables safely
         le_dict = {}
-        for col in ['STATE', 'REGION_TYPE', 'EDUCATION_GROUP', 'OCCUPATION_GROUP', 'GENDER_GROUP']:
-            le = LabelEncoder()
-            df_model[col] = le.fit_transform(df_model[col].astype(str))
-            le_dict[col] = le
+        for col in available_features:
+            if X[col].dtype == 'object':
+                # Fill NaN with 'Unknown' before encoding
+                X[col] = X[col].fillna('Unknown')
+                le = LabelEncoder()
+                try:
+                    X[col] = le.fit_transform(X[col].astype(str))
+                    le_dict[col] = le
+                except Exception as e:
+                    st.warning(f"Could not encode {col}: {str(e)}")
+                    # Remove problematic column
+                    available_features.remove(col)
+                    X = X[available_features]
+        
+        # Ensure we have features to work with
+        if len(available_features) == 0:
+            st.error("No suitable features available for modeling.")
+        else:
+            # Remove any remaining NaN values
+            mask = ~X.isna().any(axis=1) & ~y.isna()
+            X_clean = X[mask]
+            y_clean = y[mask]
+            
+            if len(X_clean) == 0:
+                st.error("No valid data remaining after cleaning.")
+            else:
+                try:
+                    # Use smaller, faster model for Streamlit
+                    rf = RandomForestRegressor(n_estimators=50, random_state=42, max_depth=10)
+                    rf.fit(X_clean, y_clean)
 
-        features = ['REGION_TYPE', 'EDUCATION_GROUP', 'OCCUPATION_GROUP', 'GENDER_GROUP', 'SIZE_GROUP', 'STATE']
-        X = df_model[features]
-        y = np.log1p(df_model['TOTAL_INCOME'])  # Log transform
+                    importance = pd.DataFrame({
+                        'Feature': available_features,
+                        'Importance': rf.feature_importances_
+                    }).sort_values('Importance', ascending=False)
 
-        rf = RandomForestRegressor(n_estimators=200, random_state=42, n_jobs=-1)
-        rf.fit(X, y)
+                    fig_imp = px.bar(importance, x='Importance', y='Feature', orientation='h',
+                                     title="Top Drivers of Household Income (Random Forest)",
+                                     color='Importance', color_continuous_scale="Viridis")
+                    st.plotly_chart(fig_imp, use_container_width=True)
 
-        importance = pd.DataFrame({
-            'Feature': features,
-            'Importance': rf.feature_importances_
-        }).sort_values('Importance', ascending=False)
-
-        fig_imp = px.bar(importance, x='Importance', y='Feature', orientation='h',
-                         title="Top Drivers of Household Income (Random Forest)",
-                         color='Importance', color_continuous_scale="Viridis")
-        st.plotly_chart(fig_imp, use_container_width=True)
-
-        top_feature = importance.iloc[0]['Feature']
-        st.success(f"**Strongest Predictor**: {top_feature.replace('_', ' ').title()}")
+                    top_feature = importance.iloc[0]['Feature']
+                    st.success(f"**Strongest Predictor**: {top_feature.replace('_', ' ').title()}")
+                    
+                    # Show sample size info
+                    st.info(f"Model trained on {len(X_clean):,} households with {len(available_features)} features")
+                    
+                except Exception as e:
+                    st.error(f"Model training failed: {str(e)}")
+                    st.info("This might be due to memory limitations. Try refreshing the app or using a smaller dataset.")
 
     with tab2:
         st.subheader("Household Segmentation via Clustering")
         
-        cluster_features = df_model[['TOTAL_INCOME', 'TOTAL_EXPENDITURE', 'SIZE_GROUP', 'EDUCATION_GROUP', 'REGION_TYPE']]
-        scaler = StandardScaler()
-        X_scaled = scaler.fit_transform(cluster_features)
-
-        kmeans = KMeans(n_clusters=5, random_state=42)
-        df_model['Cluster'] = kmeans.fit_predict(X_scaled)
-
-        cluster_profile = df_model.groupby('Cluster').agg({
-            'TOTAL_INCOME': 'mean',
-            'TOTAL_EXPENDITURE': 'mean',
-            'EDUCATION_GROUP': lambda x: x.mode()[0],
-            'REGION_TYPE': lambda x: x.mode()[0]
-        }).round(0)
-
-        fig_cluster = px.scatter(df_model.sample(5000), x='TOTAL_INCOME', y='TOTAL_EXPENDITURE',
-                                 color='Cluster', size='SIZE_GROUP',
-                                 hover_data=['STATE', 'EDUCATION_GROUP'],
-                                 title="5 Hidden Household Types in India")
-        st.plotly_chart(fig_cluster, use_container_width=True)
+        try:
+            # Use simpler clustering approach
+            cluster_features_list = []
+            for col in ['TOTAL_INCOME', 'TOTAL_EXPENDITURE', 'SIZE_GROUP']:
+                if col in df_clean.columns:
+                    cluster_features_list.append(col)
+            
+            if len(cluster_features_list) < 2:
+                st.warning("Not enough features available for clustering.")
+            else:
+                cluster_data = df_clean[cluster_features_list].copy()
+                
+                # Convert SIZE_GROUP to numeric if it exists
+                if 'SIZE_GROUP' in cluster_data.columns:
+                    cluster_data['SIZE_GROUP'] = pd.to_numeric(
+                        cluster_data['SIZE_GROUP'].str.extract('(\d+)')[0], 
+                        errors='coerce'
+                    )
+                    cluster_data['SIZE_GROUP'] = cluster_data['SIZE_GROUP'].fillna(cluster_data['SIZE_GROUP'].median())
+                
+                # Handle missing values
+                cluster_data = cluster_data.fillna(cluster_data.median())
+                
+                # Sample data for performance
+                sample_size = min(5000, len(cluster_data))
+                cluster_sample = cluster_data.sample(sample_size, random_state=42)
+                
+                scaler = StandardScaler()
+                X_scaled = scaler.fit_transform(cluster_sample)
+                
+                kmeans = KMeans(n_clusters=4, random_state=42)  # Fewer clusters for stability
+                clusters = kmeans.fit_predict(X_scaled)
+                
+                # Create visualization
+                if len(cluster_features_list) >= 2:
+                    fig_cluster = px.scatter(
+                        x=cluster_sample.iloc[:, 0], 
+                        y=cluster_sample.iloc[:, 1],
+                        color=clusters.astype(str),
+                        title=f"Household Segments (Sample: {sample_size:,} households)",
+                        labels={'x': cluster_features_list[0], 'y': cluster_features_list[1]}
+                    )
+                    st.plotly_chart(fig_cluster, use_container_width=True)
+                    
+                    st.info(f"**Cluster Insights**: Found {len(np.unique(clusters))} distinct household types")
+                else:
+                    st.warning("Not enough features for 2D visualization.")
+                    
+        except Exception as e:
+            st.error(f"Clustering failed: {str(e)}")
+            st.info("This might be due to computational limits. The analysis works best with smaller samples.")
 
     with tab3:
         st.subheader("Causal Inference: What If Scenarios")
         st.info("**Observational Causal Hints (Not RCT)**")
-        edu_income = df_clean.groupby('EDUCATION_GROUP')['TOTAL_INCOME'].mean().round(0)
-        fig_causal = px.bar(x=edu_income.index, y=edu_income.values,
-                            title="Average Income by Education — Causal Premium Estimate",
-                            labels={'y': 'Monthly Income (₹)', 'x': 'Education Level'})
-        st.plotly_chart(fig_causal, use_container_width=True)
         
-        if 'Illiterate' in edu_income.index and 'Graduate' in edu_income.index:
-            illiterate_inc = edu_income['Illiterate']
-            graduate_inc = edu_income['Graduate']
-            premium = graduate_inc - illiterate_inc
-            st.success(f"**Moving from Illiterate → Graduate** = **+₹{premium:,.0f}/month** (observational)")
+        try:
+            if 'EDUCATION_GROUP' in df_clean.columns:
+                edu_income = df_clean.groupby('EDUCATION_GROUP')['TOTAL_INCOME'].mean().round(0).sort_values()
+                fig_causal = px.bar(
+                    x=edu_income.index, 
+                    y=edu_income.values,
+                    title="Average Income by Education — Causal Premium Estimate",
+                    labels={'y': 'Monthly Income (₹)', 'x': 'Education Level'}
+                )
+                fig_causal.update_layout(xaxis_tickangle=45)
+                st.plotly_chart(fig_causal, use_container_width=True)
+                
+                if len(edu_income) >= 2:
+                    lowest_edu = edu_income.index[0]
+                    highest_edu = edu_income.index[-1]
+                    lowest_inc = edu_income.iloc[0]
+                    highest_inc = edu_income.iloc[-1]
+                    premium = highest_inc - lowest_inc
+                    
+                    st.success(
+                        f"**Education Premium**: Moving from **{lowest_edu}** → **{highest_edu}** = " +
+                        f"**+₹{premium:,.0f}/month** (observational correlation)"
+                    )
+            else:
+                st.warning("Education data not available for causal analysis.")
+                
+        except Exception as e:
+            st.error(f"Causal analysis failed: {str(e)}")
 
 # ===================================================================
 # POLICY LAB SECTION - THE CROWN JEWEL (PURE INNOVATION)
