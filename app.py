@@ -561,10 +561,10 @@ elif section == "💰 Financial Analysis":
             legend=dict(title="Health Status", font=dict(size=14)),
             height=550,
             annotations=[
-                dict(text="RURAL", x=0.22, y=0.5, font_size=18, showarrow=False, 
-                     font=dict(color="black", family="Arial", size=16)),
-                dict(text="URBAN", x=0.78, y=0.5, font_size=18, showarrow=False,
-                     font=dict(color="black", family="Arial", size=16))
+                dict(text="RURAL", x=0.25, y=0.5, font_size=18, showarrow=False, 
+                     font=dict(color="white", family="Arial", size=16)),
+                dict(text="URBAN", x=0.75, y=0.5, font_size=18, showarrow=False,
+                     font=dict(color="white", family="Arial", size=16))
             ]
         )
         st.plotly_chart(fig, use_container_width=True)
