@@ -1634,7 +1634,6 @@ elif section == "🎯 Policy Lab":
     - Cost ₹{total_cost:,.0f} Crore per month
     """)
 
-    st.balloons()
     st.success("Policy Lab Complete — You just ran a national policy experiment in seconds")
 
 # ===================================================================
@@ -1645,18 +1644,21 @@ st.markdown(
     """
     <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 15px;">
         <h2>Household Financial Intelligence Platform</h2>
-        <p><strong>Built with Blood, Sweat & Python</strong><br>
-        Data → Intelligence → Policy → Progress</p>
-        <p>© 2025 | National Income-Expenditure Survey Analysis</p>
+        <p><strong>Academic Research Platform</strong><br>
+        Analyzing India's Household Economic Landscape</p>
+        <p>Data: CMIE CPHS Wave 28 | Methodology: Weighted National Analysis</p>
     </div>
     """, unsafe_allow_html=True
 )
 
 # ===================================================================
-# REAL-TIME DATA STATUS
+# PLATFORM METRICS
 # ===================================================================
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 📡 Platform Status")
-st.sidebar.success("🟢 Live & Operational")
-st.sidebar.info(f"📊 {len(df_clean):,} households analyzed")
-st.sidebar.info(f"🕒 Last updated: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}")
+st.sidebar.markdown("### 📊 Platform Metrics")
+st.sidebar.success("🟢 Analysis Ready")
+st.sidebar.info(f"🏠 {len(df_clean):,} Households")
+st.sidebar.info(f"🗺️ {df_clean['STATE'].nunique():,} States/UTs")
+st.sidebar.info(f"🏙️ {len(df_clean[df_clean['REGION_TYPE']=='URBAN']):,} Urban")
+st.sidebar.info(f"🌾 {len(df_clean[df_clean['REGION_TYPE']=='RURAL']):,} Rural")
+st.sidebar.info(f"📅 Dataset: CPHS Wave 28 (Aug 2022)")
