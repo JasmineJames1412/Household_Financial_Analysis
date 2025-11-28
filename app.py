@@ -193,17 +193,17 @@ st.sidebar.markdown("""
     
     /* Target the radio button labels specifically */
     div[data-testid="stRadio"] > label > div:first-child {
-        font-size: 0.7rem !important;
+        font-size: 0.8rem !important;
     }
     
     /* Target the selected radio button text */
     div[data-testid="stRadio"] > div > label > div:first-child {
-        font-size: 0.7rem !important;
+        font-size: 0.8rem !important;
     }
     
     /* Target all radio button option texts */
     .st-bb, .st-bc, .st-bd, .st-be {
-        font-size: 0.7rem !important;
+        font-size: 0.8rem !important;
     }
     
     /* More specific targeting for radio button text */
@@ -213,13 +213,13 @@ st.sidebar.markdown("""
     
     /* Even more specific targeting */
     div[data-testid="stRadio"] div {
-        font-size: 0.7rem !important;
+        font-size: 0.8rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown(f"""
-<div style="color: {PPT_COLORS['primary_gold']}; font-size: 0.7rem; font-weight: bold; text-align: center; margin-bottom: 0.2rem; margin-top: -1rem;">
+<div style="color: {PPT_COLORS['primary_gold']}; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 0.2rem; margin-top: -1rem;">
 📊 Navigation
 </div>
 """, unsafe_allow_html=True)
