@@ -88,26 +88,7 @@ st.markdown("""
         background-color: #0a0a1a;
     }
     
-    /* Radio buttons and select boxes - FIXED */
-    .st-bb, .st-bc, .st-bd, .st-be {
-        background-color: #1a1a2e;
-        color: white;
-    }
-    
-    /* Fix radio button selection indicators */
-    div[data-testid="stRadio"] > label > div:first-child {
-        background-color: #FFD700 !important;
-    }
-    
-    /* Radio button labels */
-    div[data-testid="stRadio"] > label {
-        color: white !important;
-    }
-    
-    /* Selected radio button dot */
-    .st-bx {
-        background-color: #FFD700 !important;
-    }
+    /* REMOVE the problematic radio button styling - let Streamlit handle it */
     
     /* Dataframe styling */
     .dataframe {
@@ -167,6 +148,7 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
 # ===================================================================
 # UPDATED COLOR SCHEMES FOR CHARTS
 # ===================================================================
