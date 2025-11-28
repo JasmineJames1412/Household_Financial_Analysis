@@ -183,12 +183,22 @@ CHART_COLOR_SCALES = {
 st.markdown('<div class="main-header">🏠 Household Financial Intelligence Platform</div>', unsafe_allow_html=True)
 st.markdown("### *Real-time Economic Insights & Policy Simulation Dashboard*")
 
-# Navigation - Ultra Compact version with negative margins
+# Navigation - Alternative approach with custom styling
 st.sidebar.markdown("""
 <style>
     .sidebar .sidebar-content {
         padding-top: 0rem;
         margin-top: -3rem;
+    }
+    
+    /* Force smaller font for all sidebar text */
+    .css-1d391kg {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Specifically target radio button labels */
+    .st-bx, .st-by, .st-bz, .st-b0 {
+        font-size: 0.7rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
