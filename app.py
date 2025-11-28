@@ -194,7 +194,7 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 
 st.sidebar.markdown(f"""
-<div style="color: {PPT_COLORS['primary_gold']}; font-size: 0.7rem; font-weight: bold; text-align: center; margin-bottom: 0.5rem; margin-top: -2rem;">
+<div style="color: {PPT_COLORS['primary_gold']}; font-size: 0.7rem; font-weight: bold; text-align: center; margin-bottom: 0.2rem; margin-top: -1rem;">
 📊 Navigation
 </div>
 """, unsafe_allow_html=True)
