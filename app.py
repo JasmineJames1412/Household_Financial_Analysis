@@ -1854,7 +1854,7 @@ st.markdown(
 # ===================================================================
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"""
-<div style="color: {PPT_COLORS['primary_gold']}; font-size: 1.1rem; font-weight: bold; text-align: center; margin-bottom: 0.5rem;">
+<div style="color: {PPT_COLORS['primary_gold']}; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 0.5rem;">
 📊 Platform Metrics
 </div>
 """, unsafe_allow_html=True)
