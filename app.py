@@ -203,10 +203,18 @@ CHART_COLOR_SCALES = {
 st.markdown('<div class="main-header">🏠 Household Financial Intelligence Platform</div>', unsafe_allow_html=True)
 st.markdown("### *Real-time Economic Insights & Policy Simulation Dashboard*")
 
-# Navigation - Compact version
-st.sidebar.markdown("---")
+# Navigation - Ultra Compact version with negative margins
+st.sidebar.markdown("""
+<style>
+    .sidebar .sidebar-content {
+        padding-top: 0rem;
+        margin-top: -3rem;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 st.sidebar.markdown(f"""
-<div style="color: {PPT_COLORS['primary_gold']}; font-size: 1.1rem; font-weight: bold; text-align: center; margin-bottom: 1rem;">
+<div style="color: {PPT_COLORS['primary_gold']}; font-size: 1.1rem; font-weight: bold; text-align: center; margin-bottom: 0.5rem; margin-top: -2rem;">
 📊 Navigation
 </div>
 """, unsafe_allow_html=True)
@@ -220,8 +228,9 @@ section = st.sidebar.radio(
     label_visibility="collapsed"
 )
 
-# Add some spacing
-st.sidebar.markdown("<br>", unsafe_allow_html=True)
+# Add minimal spacing
+st.sidebar.markdown("<div style='margin-top: 0.5rem;'></div>", unsafe_allow_html=True)
+
 # ===================================================================
 # DATA LOADING FUNCTION
 # ===================================================================
