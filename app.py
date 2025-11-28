@@ -184,16 +184,25 @@ CHART_COLOR_SCALES = {
 st.markdown('<div class="main-header">🏠 Household Financial Intelligence Platform</div>', unsafe_allow_html=True)
 st.markdown("### *Real-time Economic Insights & Policy Simulation Dashboard*")
 
-# Navigation
+# Navigation - Compact version
 st.sidebar.markdown("---")
-st.sidebar.title("📊 Navigation")
+st.sidebar.markdown(f"""
+<div style="color: {PPT_COLORS['primary_gold']}; font-size: 1.1rem; font-weight: bold; text-align: center; margin-bottom: 1rem;">
+📊 Navigation
+</div>
+""", unsafe_allow_html=True)
+
+# Compact navigation options
 section = st.sidebar.radio(
     "Explore Insights:",
     ["🌐 Dashboard Overview", "💰 Financial Analysis", "🏙️ Regional Intelligence", 
      "📈 Income Dynamics", "🛒 Spending Patterns", "👥 Demographic Insights",
-     "⚖️ Inequality Explorer", "🔬 Advanced Analytics", "🎯 Policy Lab"]
+     "⚖️ Inequality Explorer", "🔬 Advanced Analytics", "🎯 Policy Lab"],
+    label_visibility="collapsed"
 )
 
+# Add some spacing
+st.sidebar.markdown("<br>", unsafe_allow_html=True)
 # ===================================================================
 # DATA LOADING FUNCTION
 # ===================================================================
@@ -1821,11 +1830,10 @@ elif section == "🎯 Policy Lab":
 st.markdown("---")
 st.markdown(
     f"""
-    <div style="text-align: center; padding: 2rem; background: linear-gradient(135deg, {PPT_COLORS['dark_navy']}, {PPT_COLORS['medium_navy']}); color: white; border-radius: 15px; border: 2px solid {PPT_COLORS['primary_gold']};">
-        <h2 style="color: {PPT_COLORS['primary_gold']};">Household Financial Intelligence Platform</h2>
-        <p><strong style="color: {PPT_COLORS['accent_teal']};">Academic Research Platform</strong><br>
-        Analyzing India's Household Economic Landscape</p>
-        <p style="color: {PPT_COLORS['accent_cyan']};">Data: CMIE's Consumer Pyramids Household Survey (CPHS), Wave 28 (Aug 2022)</p>
+    <div style="text-align: center; padding: 1rem; background: linear-gradient(135deg, {PPT_COLORS['dark_navy']}, {PPT_COLORS['medium_navy']}); color: white; border-radius: 10px; border: 1px solid {PPT_COLORS['primary_gold']}; margin-top: 2rem;">
+        <h4 style="color: {PPT_COLORS['primary_gold']}; margin: 0.5rem 0;">Household Financial Intelligence Platform</h4>
+        <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color: {PPT_COLORS['accent_teal']};">Academic Research Platform</strong></p>
+        <p style="margin: 0.25rem 0; font-size: 0.8rem; color: {PPT_COLORS['accent_cyan']};">Data: CMIE's Consumer Pyramids Household Survey (CPHS), Wave 28 (Aug 2022)</p>
     </div>
     """, unsafe_allow_html=True
 )
@@ -1833,50 +1841,33 @@ st.markdown(
 # ===================================================================
 # UPDATED SIDEBAR METRICS WITH PPT THEME
 # ===================================================================
+# ===================================================================
+# UPDATED SIDEBAR METRICS WITH PPT THEME - COMPACT VERSION
+# ===================================================================
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"""
-<div style="color: {PPT_COLORS['primary_gold']}; font-size: 1.2rem; font-weight: bold; text-align: center;">
+<div style="color: {PPT_COLORS['primary_gold']}; font-size: 1.1rem; font-weight: bold; text-align: center; margin-bottom: 0.5rem;">
 📊 Platform Metrics
 </div>
 """, unsafe_allow_html=True)
 
-# Custom metric styling
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
-            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['primary_gold']}; 
-            margin: 0.5rem 0; color: white;">
-    <div style="color: {PPT_COLORS['accent_teal']}; font-weight: bold;">🟢 Analysis Ready</div>
-</div>
-""", unsafe_allow_html=True)
+# Compact metric styling
+metrics_data = [
+    ("🟢 Analysis Ready", f"{len(df_clean):,}", "Households", PPT_COLORS['accent_teal']),
+    ("🏠", f"{len(df_clean):,}", "Households", PPT_COLORS['chart_blue']),
+    ("🗺️", f"{df_clean['STATE'].nunique():,}", "States/UTs", PPT_COLORS['chart_orange']),
+    ("🏙️", f"{len(df_clean[df_clean['REGION_TYPE']=='URBAN']):,}", "Urban", PPT_COLORS['accent_teal']),
+    ("🌾", f"{len(df_clean[df_clean['REGION_TYPE']=='RURAL']):,}", "Rural", PPT_COLORS['chart_yellow'])
+]
 
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
-            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['chart_blue']}; 
-            margin: 0.5rem 0; color: white;">
-    <div>🏠 {len(df_clean):,} Households</div>
-</div>
-""", unsafe_allow_html=True)
-
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
-            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['chart_orange']}; 
-            margin: 0.5rem 0; color: white;">
-    <div>🗺️ {df_clean['STATE'].nunique():,} States/UTs</div>
-</div>
-""", unsafe_allow_html=True)
-
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
-            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['accent_teal']}; 
-            margin: 0.5rem 0; color: white;">
-    <div>🏙️ {len(df_clean[df_clean['REGION_TYPE']=='URBAN']):,} Urban</div>
-</div>
-""", unsafe_allow_html=True)
-
-st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
-            padding: 1rem; border-radius: 10px; border: 1px solid {PPT_COLORS['chart_yellow']}; 
-            margin: 0.5rem 0; color: white;">
-    <div>🌾 {len(df_clean[df_clean['REGION_TYPE']=='RURAL']):,} Rural</div>
-</div>
-""", unsafe_allow_html=True)
+for icon, value, label, color in metrics_data:
+    st.sidebar.markdown(f"""
+    <div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
+                padding: 0.5rem; border-radius: 8px; border: 1px solid {color}; 
+                margin: 0.25rem 0; color: white; font-size: 0.9rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>{icon} {label}</span>
+            <span style="font-weight: bold; color: {color};">{value}</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
