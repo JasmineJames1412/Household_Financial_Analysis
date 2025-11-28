@@ -520,8 +520,6 @@ elif section == "💰 Financial Analysis":
     
     st.plotly_chart(fig_map, use_container_width=True)
 
-    st.success("Financial Intelligence Engine Complete — 4 analysis combinations: National/State × All/Urban-Rural")
-
 # ===================================================================
 # REGIONAL INTELLIGENCE SECTION
 # ===================================================================
@@ -660,8 +658,6 @@ elif section == "🏙️ Regional Intelligence":
         st.error("**Bottom 5 States**\n" + "\n".join([f"{i}. {s}" for i, s in enumerate(rank_df.sort_values('Performance_Score', ascending=False).tail(5)['STATE'], 1)]))
 
     st.caption("Performance Score = 40% Income + 60% Savings Rate (weighted composite index)")
-
-    st.success("Regional Intelligence Complete — Now with Radar Comparison + National Ranking!")
 
 # ===================================================================
 # INCOME DYNAMICS SECTION
@@ -906,8 +902,6 @@ elif section == "📈 Income Dynamics":
     with col3:
         st.metric("Regional Factor", "+58%", "Urban premium")
 
-    st.success("Income Intelligence Engine Complete — 4 analysis combinations: National/State × All/Urban-Rural")
-
 # ===================================================================
 # SPENDING PATTERNS SECTION
 # ===================================================================
@@ -1082,8 +1076,6 @@ elif section == "🛒 Spending Patterns":
         st.metric("Education Investment", f"{education_share:.1f}%", delta="Future-Ready" if education_share > 8 else "Low")
     with col4:
         st.metric("Lifestyle Spending", f"{restaurant_share:.1f}%", delta="Rising Middle Class")
-
-    st.success("Consumer Spending Intelligence Engine Complete — Fully Consistent with Income Module | 4 Analysis Modes | Policy-Ready Insights")
 
 # ===================================================================
 # DEMOGRAPHIC INSIGHTS SECTION
@@ -1302,15 +1294,6 @@ elif section == "👥 Demographic Insights":
 
     # Final intelligence summary
     st.markdown("---")
-    st.success("""
-    **Demographic Intelligence Engine Complete**  
-    • Weighted national distribution  
-    • Financial outcomes by group with savings rate overlay  
-    • Mobility matrices (Education/Occupation)  
-    • Gender-Education-Income nexus  
-    • Urban premium analysis  
-    Now with 3 interactive tabs and policy-grade insights
-    """)
 
 # ===================================================================
 # INEQUALITY EXPLORER SECTION - FULLY REINVENTED
@@ -1464,8 +1447,6 @@ elif section == "⚖️ Inequality Explorer":
         else:
             st.info("Inequality is mostly **within** urban and rural areas")
 
-    st.success("Inequality Intelligence Lab Complete — Now with Palma, Theil, Lorenz, and Decomposition")
-
 # ===================================================================
 # ADVANCED ANALYTICS SECTION - NOW A TRUE PREDICTIVE SUITE
 # ===================================================================
@@ -1542,8 +1523,6 @@ elif section == "🔬 Advanced Analytics":
             graduate_inc = edu_income['Graduate']
             premium = graduate_inc - illiterate_inc
             st.success(f"**Moving from Illiterate → Graduate** = **+₹{premium:,.0f}/month** (observational)")
-
-    st.success("Predictive Intelligence Suite Complete — ML-powered insights ready for research")
 
 # ===================================================================
 # POLICY LAB SECTION - THE CROWN JEWEL (PURE INNOVATION)
@@ -1633,8 +1612,6 @@ elif section == "🎯 Policy Lab":
     - Lift millions above poverty line
     - Cost ₹{total_cost:,.0f} Crore per month
     """)
-
-    st.success("Policy Lab Complete — You just ran a national policy experiment in seconds")
 
 # ===================================================================
 # FINAL FOOTER
