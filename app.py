@@ -183,33 +183,36 @@ CHART_COLOR_SCALES = {
 st.markdown('<div class="main-header">🏠 Household Financial Intelligence Platform</div>', unsafe_allow_html=True)
 st.markdown("### *Real-time Economic Insights & Policy Simulation Dashboard*")
 
-# Navigation - Most aggressive approach
+# Navigation - Ultra Compact with 0.7rem font for section texts
 st.sidebar.markdown("""
 <style>
     .sidebar .sidebar-content {
         padding-top: 0rem;
         margin-top: -3rem;
+    }
+    
+    /* Target the radio button labels specifically */
+    div[data-testid="stRadio"] > label > div:first-child {
         font-size: 0.7rem !important;
     }
     
-    /* Target all text in sidebar */
-    .css-1d391kg, .css-1lcbmhc {
+    /* Target the selected radio button text */
+    div[data-testid="stRadio"] > div > label > div:first-child {
         font-size: 0.7rem !important;
     }
     
-    /* Target radio buttons specifically */
-    div[data-testid="stRadio"] > div > label {
-        font-size: 0.7rem !important;
-        padding: 0.2rem !important;
-    }
-    
-    /* Target the radio button container */
-    .stRadio > div {
-        font-size: 0.7rem !important;
-    }
-    
-    /* Target individual option labels */
+    /* Target all radio button option texts */
     .st-bb, .st-bc, .st-bd, .st-be {
+        font-size: 0.7rem !important;
+    }
+    
+    /* More specific targeting for radio button text */
+    div.row-widget.stRadio > div[role="radiogroup"] > label {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Even more specific targeting */
+    div[data-testid="stRadio"] div {
         font-size: 0.7rem !important;
     }
 </style>
