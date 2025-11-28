@@ -561,9 +561,9 @@ elif section == "💰 Financial Analysis":
             legend=dict(title="Health Status", font=dict(size=14)),
             height=550,
             annotations=[
-                dict(text="RURAL", x=0.25, y=0.5, font_size=18, showarrow=False, 
+                dict(text="RURAL", x=0.20, y=0.5, font_size=18, showarrow=False, 
                      font=dict(color="white", family="Arial", size=16)),
-                dict(text="URBAN", x=0.75, y=0.5, font_size=18, showarrow=False,
+                dict(text="URBAN", x=0.70, y=0.5, font_size=18, showarrow=False,
                      font=dict(color="white", family="Arial", size=16))
             ]
         )
