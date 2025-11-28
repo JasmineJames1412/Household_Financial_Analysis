@@ -1849,12 +1849,9 @@ st.markdown(
 # ===================================================================
 # UPDATED SIDEBAR METRICS WITH PPT THEME
 # ===================================================================
-# ===================================================================
-# UPDATED SIDEBAR METRICS WITH PPT THEME - COMPACT VERSION
-# ===================================================================
 st.sidebar.markdown("---")
 st.sidebar.markdown(f"""
-<div style="color: {PPT_COLORS['primary_gold']}; font-size: 0.8rem; font-weight: bold; text-align: center; margin-bottom: 0.5rem;">
+<div style="color: {PPT_COLORS['primary_gold']}; font-size: 0.6rem; font-weight: bold; text-align: center; margin-bottom: 0.5rem;">
 📊 Platform Metrics
 </div>
 """, unsafe_allow_html=True)
@@ -1872,7 +1869,7 @@ for icon, value, label, color in metrics_data:
     st.sidebar.markdown(f"""
     <div style="background: linear-gradient(135deg, {PPT_COLORS['medium_navy']}, {PPT_COLORS['light_navy']}); 
                 padding: 0.5rem; border-radius: 8px; border: 1px solid {color}; 
-                margin: 0.25rem 0; color: white; font-size: 0.9rem;">
+                margin: 0.25rem 0; color: white; font-size: 0.6rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <span>{icon} {label}</span>
             <span style="font-weight: bold; color: {color};">{value}</span>
